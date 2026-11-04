@@ -4,6 +4,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 html,body{margin:0}
+[hidden]{display:none!important}
 
 /* Layout: visual dos painéis CRV — topo com logo, filtros e indicadores; gráficos em grade; maiores velocidades e ocorrências embaixo */
 :root{--bg:#eef0f4;--card:#ffffff;--line:#d9dde6;--ink:#1d2433;--muted:#5b6475;--navy:#22378c;--navy-2:#2a44a8;
@@ -36,6 +37,13 @@ h1{margin:0;color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.02e
 .gcard b{font-size:13px;color:var(--c)}
 .gcard .f{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.gcard .f strong{color:var(--ink)}
 .gcard small{font-size:11px;color:var(--muted)}
+.turnos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.turno{border:1px solid var(--line);border-top:4px solid var(--c);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:5px;background:#fff;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.turno[aria-pressed="true"]{outline:2px solid var(--c);outline-offset:-2px;background:#f8f9fc}
+.turno .tt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.turno .tt b{font-size:14px;color:var(--c)}.turno .tt span{font-size:22px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.turno .f{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.turno .f strong{color:var(--ink)}
+.turno .bar{display:flex;height:9px;border-radius:5px;overflow:hidden;background:var(--zebra)}.turno .bar i{display:block;height:100%}
+.turno small{font-size:11px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
 .card{background:var(--card);border-radius:10px;overflow:hidden;min-width:0}
 .card>h2{margin:0;background:var(--navy);color:#fff;text-align:center;font-size:12px;font-weight:600;padding:4px 8px;text-transform:uppercase}
@@ -59,9 +67,20 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
 .tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:8px;color:#fff;background:var(--c)}
 .ord{display:flex;gap:6px;margin-bottom:6px}.ord button{font:600 11.5px var(--font);border:1px solid var(--line);background:#fff;border-radius:4px;padding:3px 9px;cursor:pointer}
 .ord button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.dlg{position:fixed;inset:0;background:rgba(20,30,60,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlg-c{background:#fff;border-radius:12px;max-width:980px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.dlg-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:var(--navy);color:#fff;padding:10px 14px;position:sticky;top:0;z-index:2}
+.dlg-h b{display:block;font-size:15px}.dlg-h small{font-size:12px;opacity:.85}
+.dlg-h button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;font-size:14px;padding:2px 10px;cursor:pointer}
+.dlg-b{padding:10px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.dlg-b h3{margin:0 0 4px;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dlg-b h3 small{font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
+.dlg-b .acao{align-self:flex-start;font:700 12px var(--font);border-radius:4px;padding:5px 12px;border:1px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+a.lkf{color:var(--navy-2);text-decoration:underline;cursor:pointer;font-weight:700}
+.tag.lkf{cursor:pointer;text-decoration:underline}
 .ass{text-align:center;font-size:12px;opacity:.6;padding:12px 0 0}
 @media (max-width:1050px){.grid{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:640px){.top{grid-template-columns:1fr}.kpis,.grupos{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media (max-width:640px){.turnos{grid-template-columns:minmax(0,1fr)}.top{grid-template-columns:1fr}.kpis,.grupos{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 </style>
 </head><body>
 <div class="pg">
@@ -73,7 +92,8 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
     <label>Grupo <select id="f-g"><option value="">Todos</option><option>Caminhões</option><option>Pranchas</option><option>Ônibus</option></select></label>
     <label>Frota <select id="f-f"></select></label>
     <label>Dia <select id="f-d"></select></label>
-    <label>Via <select id="f-t"><option value="">Todas</option><option>Rodovia</option><option>Zona rural</option></select></label>
+    <label>Turno <select id="f-u"><option value="">Todos</option><option value="A">A · 07–15h</option><option value="B">B · 15–23h</option><option value="C">C · 23–07h</option></select></label>
+    <label>Via <select id="f-t"><option value="">Todas</option><option>Rodovia</option><option>Estrada de terra</option></select></label>
     <button type="button" id="f-x">Limpar filtros</button>
    </div>
    <div class="kpis" id="kpis"></div>
@@ -81,8 +101,9 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
  </div>
  <div class="lead" id="lead"></div>
  <div class="grupos" id="grupos"></div>
+ <section class="card"><h2>Excessos por turno</h2><div class="cb"><div class="turnos" id="turnos"></div><p class="note">Turno pela hora de início da ocorrência: A 07–15h, B 15–23h, C 23–07h. Clique num turno para filtrar o painel.</p></div></section>
  <div class="grid">
-  <section class="card"><h2>Excessos por frota</h2><div class="cb"><div class="leg" id="leg-f"></div><div class="tw" style="max-height:640px"><div class="chart" id="c-frota"></div></div><p class="note">Barra cheia = rodovia; parte clara = zona rural. À direita, o pico de velocidade. Clique numa frota para filtrar.</p></div></section>
+  <section class="card"><h2>Excessos por frota</h2><div class="cb"><div class="leg" id="leg-f"></div><div class="tw" style="max-height:640px"><div class="chart" id="c-frota"></div></div><p class="note">Barra cheia = rodovia (70 km/h ou mais); parte clara = estrada de terra (50 km/h). À direita, o pico de velocidade. <b>Clique numa frota para ver os 5 maiores excessos dela em cada tipo de via.</b></p></div></section>
   <section class="card"><h2>Excessos por dia e por hora</h2><div class="cb"><div class="leg" id="leg-d"></div><div class="chart" id="c-dia"></div><div class="chart" id="c-hora" style="margin-top:10px"></div><p class="note">Hora de início da ocorrência. Clique num dia para filtrar.</p></div></section>
  </div>
  <div class="grid">
@@ -90,10 +111,13 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
   <section class="card"><h2>10 maiores velocidades</h2><div class="cb"><div class="tw"><table><thead><tr><th>Frota</th><th>Dia</th><th>Hora</th><th class="n">Pico</th><th class="n">Limite</th><th>Local</th></tr></thead><tbody id="t-top"></tbody></table></div></div></section>
  </div>
  <section class="card"><h2>Ocorrências</h2><div class="cb"><div class="ord"><button type="button" data-o="h" aria-pressed="true">Por horário</button><button type="button" data-o="p" aria-pressed="false">Por pico</button><button type="button" data-o="d" aria-pressed="false">Por duração</button></div>
-  <div class="tw scroll"><table><thead><tr><th>Frota</th><th>Grupo</th><th>Dia</th><th>Hora</th><th class="n">Duração</th><th class="n">Velocidade (mín · máx · média)</th><th class="n">Limite</th><th>Área / rota</th><th>Local de início</th></tr></thead><tbody id="t-oc"></tbody></table></div>
+  <div class="tw scroll"><table><thead><tr><th>Frota</th><th>Grupo</th><th>Dia</th><th>Hora</th><th>Turno</th><th class="n">Duração</th><th class="n">Velocidade (mín · máx · média)</th><th class="n">Limite</th><th>Área / rota</th><th>Local de início</th></tr></thead><tbody id="t-oc"></tbody></table></div>
   <p class="note" id="n-oc"></p></div></section>
  <section class="card"><h2>Como os excessos foram contados</h2><div class="cb"><ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.55;display:grid;gap:4px" id="regras"></ul></div></section>
  <div class="ass">Desenvolvido por João Vitor - CRV</div>
+ <div class="dlg" id="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="dlg-t"><div class="dlg-c">
+  <div class="dlg-h"><div><b id="dlg-t"></b><small id="dlg-s"></small></div><button type="button" id="dlg-x" aria-label="Fechar">✕</button></div>
+  <div class="dlg-b" id="dlg-b"></div></div></div>
 </div>
 <script>
 const D=__DADOS__;
@@ -107,12 +131,15 @@ const ALL=Object.values(D.frotas).flat();
 const VANS=D.vans||[],isVan=f=>VANS.includes(f),vanH=f=>isVan(f)?'<span class="van">VAN</span>':'',vanT=f=>isVan(f)?f+' (van)':f;
 const grupoDe=f=>Object.keys(D.frotas).find(g=>D.frotas[g].includes(f));
 const DIAS=[...new Set(E.map(e=>e.d))].sort();
-const F={g:'',f:'',d:'',t:''};
+const F={g:'',f:'',d:'',t:'',u:''};
+const TURNOS=[['A','07–15h','#2a8fbd'],['B','15–23h','#e8963a'],['C','23–07h','#3b3f6b']];
+const turno=h=>{const x=+h.slice(0,2);return x>=7&&x<15?'A':x>=15&&x<23?'B':'C'};
 const sel=id=>document.getElementById(id);
 sel('per').textContent=`${D.ini} a ${D.fim}`;
 function opts(){const fs=ALL.filter(f=>!F.g||grupoDe(f)===F.g);sel('f-f').innerHTML='<option value="">Todas</option>'+fs.map(f=>`<option value="${f}">${f} · ${isVan(f)?'van ('+grupoDe(f).toLowerCase()+')':grupoDe(f)}</option>`).join('');sel('f-f').value=F.f;
- sel('f-d').innerHTML='<option value="">Todos</option>'+DIAS.map(d=>`<option value="${d}">${dm(d)}</option>`).join('');sel('f-d').value=F.d;sel('f-g').value=F.g;sel('f-t').value=F.t}
-const filtra=(ign)=>E.filter(e=>(ign==='g'||!F.g||e.g===F.g)&&(ign==='f'||!F.f||e.f===F.f)&&(ign==='d'||!F.d||e.d===F.d)&&(!F.t||e.t===F.t));
+ sel('f-d').innerHTML='<option value="">Todos</option>'+DIAS.map(d=>`<option value="${d}">${dm(d)}</option>`).join('');sel('f-d').value=F.d;sel('f-g').value=F.g;sel('f-t').value=F.t;sel('f-u').value=F.u}
+E.forEach(e=>{e.u=turno(e.h)});
+const filtra=(ign)=>E.filter(e=>(ign==='g'||!F.g||e.g===F.g)&&(ign==='f'||!F.f||e.f===F.f)&&(ign==='d'||!F.d||e.d===F.d)&&(ign==='u'||!F.u||e.u===F.u)&&(!F.t||e.t===F.t));
 const svg=(box,W,H)=>{box.innerHTML='';const s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox',`0 0 ${W} ${H}`);box.appendChild(s);return s};
 const el=(tag,at,p,txt)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e};
 function tip(box){let t=box.querySelector('.tip');if(!t){t=document.createElement('div');t.className='tip';t.hidden=true;box.appendChild(t)}
@@ -125,7 +152,7 @@ function render(){
  const acima=L.length?L.reduce((a,e)=>a+(e.vmax-e.lim),0)/L.length:0;
  sel('kpis').innerHTML=[
   `<div class="kpi hero"><span class="l">Velocidade máxima</span><span class="v">${pk?pk.vmax+' km/h':'—'}</span><span class="s">${pk?`${pk.f} (${isVan(pk.f)?'van, '+pk.g.toLowerCase():pk.g.toLowerCase()}) · ${dm(pk.d)} ${pk.h.slice(0,5)} · limite ${pk.lim}`:'sem ocorrências'}</span></div>`,
-  `<div class="kpi"><span class="l">Ocorrências</span><span class="v">${NF(0)(L.length)}</span><span class="s">${NF(0)(L.filter(e=>e.t==='Rodovia').length)} em rodovia · ${NF(0)(L.filter(e=>e.t==='Zona rural').length)} em zona rural</span></div>`,
+  `<div class="kpi"><span class="l">Ocorrências</span><span class="v">${NF(0)(L.length)}</span><span class="s">${NF(0)(L.filter(e=>e.t==='Rodovia').length)} em rodovia · ${NF(0)(L.filter(e=>e.t==='Estrada de terra').length)} em estrada de terra</span></div>`,
   `<div class="kpi"><span class="l">Tempo acima do limite</span><span class="v">${dur(soma(L))}</span><span class="s">média de ${dur(Math.round(soma(L)/Math.max(1,L.filter(e=>e.s!=null).length)))} por ocorrência</span></div>`,
   `<div class="kpi"><span class="l">Pico médio acima do limite</span><span class="v">+${NF(1)(acima)} km/h</span><span class="s">pico da ocorrência − limite da regra</span></div>`,
   `<div class="kpi"><span class="l">Frotas com excesso</span><span class="v">${nf} de ${tot}</span><span class="s">${tot-nf?ALL.filter(f=>(!F.g||grupoDe(f)===F.g)&&(!F.f||f===F.f)&&!L.some(e=>e.f===f)).join(', ')+' sem excesso':'todas tiveram excesso'}</span></div>`].join('');
@@ -138,8 +165,16 @@ function render(){
  const Lg=filtra('g');
  sel('grupos').innerHTML=Object.keys(D.frotas).map(g=>{const l=Lg.filter(e=>e.g===g),p=l.reduce((a,e)=>Math.max(a,e.vmax),0);const lims=(D.limites||{})[g]||'';const nv=D.frotas[g].filter(isVan);const fl=(D.frotas[g].length>6?`${D.frotas[g].length} frotas`:D.frotas[g].join(', '))+(nv.length?` · inclui as vans ${nv.join(' e ')}`:'');
   return `<button type="button" class="gcard" style="--c:${COR[g]}" data-g="${g}" aria-pressed="${F.g===g}"><b>${g} <small>(${fl})</small></b><span class="f"><span>Ocorrências <strong>${NF(0)(l.length)}</strong></span><span>Tempo <strong>${dur(soma(l))}</strong></span><span>Pico <strong style="color:var(--bad)">${p||'—'}${p?' km/h':''}</strong></span></span><small>Limites: ${lims}</small></button>`}).join('');
+ /* turnos */
+ (()=>{const Lu=filtra('u');const tot=Lu.length||1;sel('turnos').innerHTML=TURNOS.map(([k,h,c])=>{const l=Lu.filter(e=>e.u===k);const pk=l.reduce((a,e)=>!a||e.vmax>a.vmax?e:a,null);
+  const pf={};l.forEach(e=>{pf[e.f]=(pf[e.f]||0)+1});const tf=Object.entries(pf).sort((a,b)=>b[1]-a[1])[0];const G=Object.keys(COR);
+  return `<button type="button" class="turno" style="--c:${c}" data-u="${k}" aria-pressed="${F.u===k}"><span class="tt"><b>Turno ${k} · ${h}</b><span>${NF(0)(l.length)}</span></span>`+
+   `<span class="bar">${G.map(g=>{const n=l.filter(e=>e.g===g).length;return n?`<i style="width:${n/Math.max(1,l.length)*100}%;background:${COR[g]}" title="${g}: ${n}"></i>`:''}).join('')}</span>`+
+   `<span class="f"><span><strong>${NF(0)(l.length/tot*100)}%</strong> das ocorrências</span><span>Tempo <strong>${dur(soma(l))}</strong></span><span>Pico <strong style="color:var(--bad)">${pk?pk.vmax+' km/h':'—'}</strong></span></span>`+
+   `<span class="f"><span>Rodovia <strong>${NF(0)(l.filter(e=>e.t==='Rodovia').length)}</strong></span><span>Estrada de terra <strong>${NF(0)(l.filter(e=>e.t==='Estrada de terra').length)}</strong></span></span>`+
+   `<small>${pk?`Maior pico: ${vanT(pk.f)} em ${dm(pk.d)} às ${pk.h.slice(0,5)}`:''}${tf?` · mais ocorrências: ${vanT(tf[0])} (${tf[1]})`:''}</small></button>`}).join('')})();
  /* por frota */
- (()=>{const Lf=filtra('f');const fs=ALL.filter(f=>(!F.g||grupoDe(f)===F.g)).map(f=>{const l=Lf.filter(e=>e.f===f);return {f,g:grupoDe(f),r:l.filter(e=>e.t==='Rodovia').length,z:l.filter(e=>e.t==='Zona rural').length,n:l.length,p:l.reduce((a,e)=>Math.max(a,e.vmax),0)}}).sort((a,b)=>b.n-a.n);
+ (()=>{const Lf=filtra('f');const fs=ALL.filter(f=>(!F.g||grupoDe(f)===F.g)).map(f=>{const l=Lf.filter(e=>e.f===f);return {f,g:grupoDe(f),r:l.filter(e=>e.t==='Rodovia').length,z:l.filter(e=>e.t==='Estrada de terra').length,n:l.length,p:l.reduce((a,e)=>Math.max(a,e.vmax),0)}}).sort((a,b)=>b.n-a.n);
   const box=sel('c-frota'),W=620,rh=24,lw=120,vw=70,H=fs.length*rh+6,s=svg(box,W,H),T=tip(box),mx=Math.max(1,...fs.map(x=>x.n)),bw=W-lw-vw-40;
   fs.forEach((x,i)=>{const y=i*rh+3,w1=bw*x.r/mx,w2=bw*x.z/mx,on=!F.f||F.f===x.f;const g=el('g',{style:'cursor:pointer',opacity:on?1:.35},s);
    el('text',{x:lw-8,y:y+14,'text-anchor':'end','font-size':12,'font-weight':F.f===x.f?800:600,fill:'#1d2433'},g,x.f);
@@ -150,8 +185,8 @@ function render(){
    el('text',{x:lw+w1+w2+5,y:y+14,'font-size':11.5,'font-weight':700,fill:'#1d2433'},g,x.n?NF(0)(x.n):'0');
    el('text',{x:W-4,y:y+14,'text-anchor':'end','font-size':11.5,'font-weight':700,fill:x.p?'#d64550':'#5b6475'},g,x.p?x.p+' km/h':'sem excesso');
    el('rect',{x:0,y,width:W,height:rh,fill:'transparent'},g);
-   g.addEventListener('mousemove',ev=>T(ev,`<b>${x.f}</b> · ${isVan(x.f)?'van (no grupo '+x.g.toLowerCase()+')':x.g}<br>${x.n} ocorrências (${x.r} rodovia · ${x.z} zona rural) · pico ${x.p||'—'} km/h`));g.addEventListener('mouseleave',()=>T());
-   g.addEventListener('click',()=>{F.f=F.f===x.f?'':x.f;opts();render()})});})();
+   g.addEventListener('mousemove',ev=>T(ev,`<b>${x.f}</b> · ${isVan(x.f)?'van (no grupo '+x.g.toLowerCase()+')':x.g}<br>${x.n} ocorrências (${x.r} rodovia · ${x.z} estrada de terra) · pico ${x.p||'—'} km/h`));g.addEventListener('mouseleave',()=>T());
+   g.addEventListener('click',()=>frotaTop(x.f))});})();
  sel('leg-f').innerHTML=Object.keys(COR).map(g=>`<span><i style="background:${COR[g]}"></i>${g}</span>`).join('');
  /* por dia (empilhado por grupo) e por hora */
  (()=>{const Ld=filtra('d');const G=Object.keys(COR);const W=620,H=170,l=34,b=26,t=18;const box=sel('c-dia'),s=svg(box,W,H),T=tip(box);
@@ -176,30 +211,51 @@ function render(){
  (()=>{const m={};L.forEach(e=>{const x=m[e.a]=m[e.a]||{a:e.a,t:e.t,n:0,p:0,s:0};x.n++;x.p=Math.max(x.p,e.vmax);x.s+=e.s||0});const rows=Object.values(m).sort((a,b)=>b.n-a.n);
   const box=sel('c-area'),W=620,rh=30,lw=250,H=Math.max(30,rows.length*rh+6),s=svg(box,W,H),T=tip(box),mx=Math.max(1,...rows.map(r=>r.n)),bw=W-lw-130;
   if(!rows.length){el('text',{x:W/2,y:20,'text-anchor':'middle','font-size':12,fill:'#5b6475'},s,'Sem ocorrências');return}
-  rows.forEach((r,i)=>{const y=i*rh+3,w=Math.max(2,bw*r.n/mx);el('text',{x:lw-8,y:y+12,'text-anchor':'end','font-size':11.5,'font-weight':600,fill:'#1d2433'},s,r.a.replace(/^Rodovia – /,'').replace(/^Zona Rural – /,'Rural · '));
+  rows.forEach((r,i)=>{const y=i*rh+3,w=Math.max(2,bw*r.n/mx);el('text',{x:lw-8,y:y+12,'text-anchor':'end','font-size':11.5,'font-weight':600,fill:'#1d2433'},s,r.a.replace(/^Rodovia – /,'').replace(/^Zona Rural – /,'Terra · '));
    el('text',{x:lw-8,y:y+24,'text-anchor':'end','font-size':10,fill:'#5b6475'},s,r.t);
    const b=el('rect',{x:lw,y:y+4,width:w,height:16,rx:2,fill:r.t==='Rodovia'?'#22378c':'#9fb0e6'},s);
    el('text',{x:lw+w+5,y:y+16,'font-size':11.5,'font-weight':700,fill:'#1d2433'},s,NF(0)(r.n));
    el('text',{x:W-4,y:y+16,'text-anchor':'end','font-size':11.5,'font-weight':700,fill:'#d64550'},s,`pico ${r.p} km/h`);
    b.addEventListener('mousemove',ev=>T(ev,`<b>${esc(r.a)}</b><br>${r.n} ocorrências · ${dur(r.s)} acima do limite · pico ${r.p} km/h`));b.addEventListener('mouseleave',()=>T())});})();
  /* top 10 */
- sel('t-top').innerHTML=[...L].sort((a,b)=>b.vmax-a.vmax||(a.d+a.h).localeCompare(b.d+b.h)).slice(0,10).map(e=>`<tr><td><span class="tag" style="--c:${COR[e.g]}">${e.f}</span>${vanH(e.f)}</td><td>${dm(e.d)}</td><td>${e.h.slice(0,5)}</td><td class="n pk">${e.vmax} km/h</td><td class="n">${e.lim}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')||'<tr><td colspan="6">Sem ocorrências.</td></tr>';
+ sel('t-top').innerHTML=[...L].sort((a,b)=>b.vmax-a.vmax||(a.d+a.h).localeCompare(b.d+b.h)).slice(0,10).map(e=>`<tr><td><span class="tag lkf" data-fr="${e.f}" role="button" tabindex="0" style="--c:${COR[e.g]}">${e.f}</span>${vanH(e.f)}</td><td>${dm(e.d)}</td><td>${e.h.slice(0,5)}</td><td class="n pk">${e.vmax} km/h</td><td class="n">${e.lim}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')||'<tr><td colspan="6">Sem ocorrências.</td></tr>';
  /* ocorrências */
  const o=document.querySelector('.ord [aria-pressed="true"]').dataset.o;
  const ord=[...L].sort(o==='p'?(a,b)=>b.vmax-a.vmax:o==='d'?(a,b)=>(b.s??-1)-(a.s??-1):(a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
- sel('t-oc').innerHTML=ord.map(e=>`<tr><td><b>${e.f}</b>${vanH(e.f)}</td><td><span class="tag" style="--c:${COR[e.g]}">${e.g}</span></td><td>${dm(e.d)}</td><td>${e.h}</td><td class="n">${e.fora?'<span title="Duração acima de 1 hora sem novas leituras: não somada">—*</span>':dur(e.s)}</td><td class="n">${e.vmin} · <span class="pk">${e.vmax}</span> · ${e.vmed}</td><td class="n">${e.lim}</td><td>${esc(e.a)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')||'<tr><td colspan="9">Sem ocorrências.</td></tr>';
+ sel('t-oc').innerHTML=ord.map(e=>`<tr><td><a class="lkf" href="#" data-fr="${e.f}">${e.f}</a>${vanH(e.f)}</td><td><span class="tag" style="--c:${COR[e.g]}">${e.g}</span></td><td>${dm(e.d)}</td><td>${e.h}</td><td>${e.u}</td><td class="n">${e.fora?'<span title="Duração acima de 1 hora sem novas leituras: não somada">—*</span>':dur(e.s)}</td><td class="n">${e.vmin} · <span class="pk">${e.vmax}</span> · ${e.vmed}</td><td class="n">${e.lim}</td><td>${esc(e.a)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')||'<tr><td colspan="10">Sem ocorrências.</td></tr>';
  sel('n-oc').textContent=`${NF(0)(L.length)} ocorrências com os filtros atuais.`;
 }
 sel('regras').innerHTML=[
  `<b>Frotas:</b> ${Object.entries(D.frotas).map(([g,L])=>`${g.toLowerCase()} ${L.join(', ')}`).join('; ')}. Caminhões = todas as frotas 605xx do arquivo, menos as pranchas. ${D.fora?`As outras ${D.fora} frotas do arquivo ficaram de fora. `:''}${D.sem.length?`Sem nenhum alerta no período: ${D.sem.join(', ')}.`:''}`,
  `<b>Limites</b> (regras do rastreador): ${Object.entries(D.limites||{}).map(([g,t])=>`${g.toLowerCase()}: ${t}`).join('; ')}.`,
  `<b>Sem contar duas vezes:</b> o rastreador gera um alerta instantâneo e um alerta "(RELATÓRIO)" para o mesmo excesso. O painel usa o "(RELATÓRIO)", que traz a duração e a velocidade mínima, máxima e média de cada ocorrência. Para os ônibus 46234 e 46236, a regra de van de 80 km/h só tem a versão instantânea e entra como está.`,
+ `<b>Tipo de via:</b> excesso com limite de 50 km/h = estrada de terra; 70 km/h ou mais = rodovia.`,
  `<b>Tempo acima do limite:</b> soma da duração das ocorrências.${D.longas.length?' Ocorrências com mais de 1 hora de duração (rastreador sem novas leituras) contam como ocorrência, mas o tempo não é somado: '+D.longas.join('; ')+'.':''}`,
  `<b>Fonte:</b> Relatório de Rastreamento — Alertas e notificações, de ${D.ini} a ${D.fim}.${D.cortado?' '+D.cortado:''}`].map(x=>`<li>${x}</li>`).join('');
-['f-g','f-f','f-d','f-t'].forEach(id=>sel(id).addEventListener('change',e=>{const k={'f-g':'g','f-f':'f','f-d':'d','f-t':'t'}[id];F[k]=e.target.value;if(k==='g'&&F.f&&grupoDe(F.f)!==F.g)F.f='';opts();render()}));
-sel('f-x').addEventListener('click',()=>{F.g=F.f=F.d=F.t='';opts();render()});
+['f-g','f-f','f-d','f-t','f-u'].forEach(id=>sel(id).addEventListener('change',e=>{const k={'f-g':'g','f-f':'f','f-d':'d','f-t':'t','f-u':'u'}[id];F[k]=e.target.value;if(k==='g'&&F.f&&grupoDe(F.f)!==F.g)F.f='';opts();render()}));
+sel('f-x').addEventListener('click',()=>{F.g=F.f=F.d=F.t=F.u='';opts();render()});
+sel('turnos').addEventListener('click',e=>{const b=e.target.closest('[data-u]');if(!b)return;F.u=F.u===b.dataset.u?'':b.dataset.u;opts();render()});
 sel('grupos').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;F.g=F.g===b.dataset.g?'':b.dataset.g;if(F.f&&grupoDe(F.f)!==F.g)F.f='';opts();render()});
 document.querySelector('.ord').addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b)return;document.querySelectorAll('.ord button').forEach(x=>x.setAttribute('aria-pressed',x===b));render()});
+/* janela da frota: 5 maiores excessos em estrada de terra e em rodovia (respeita os filtros de dia) */
+function frotaTop(f){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&(!F.d||e.d===F.d)&&(!F.u||e.u===F.u));
+ const top=t=>L.filter(e=>e.t===t).sort((a,b)=>b.vmax-a.vmax||(b.s??0)-(a.s??0)).slice(0,5);
+ const p=L.reduce((a,e)=>Math.max(a,e.vmax),0);
+ sel('dlg-t').innerHTML=`Frota ${f}${isVan(f)?' <span class="van">VAN</span>':''} — maiores excessos`;
+ sel('dlg-s').textContent=`${isVan(f)?'Van, no grupo '+g.toLowerCase():g} · ${L.length} ocorrências${F.d?' em '+dm(F.d):` de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}`}${F.u?' no turno '+F.u:''} · ${dur(soma(L))} acima do limite · pico ${p||'—'} km/h`;
+ const bloco=(t,cor)=>{const R=top(t),n=L.filter(e=>e.t===t).length,lim=R[0]?R[0].lim:(t==='Rodovia'?(isVan(f)?80:70):50);
+  return `<div><h3 style="color:${cor}">${t} <small>top 5 de ${n} ocorrências · limite ${lim} km/h</small></h3>`+
+  (R.length?`<div class="tw"><table><thead><tr><th>#</th><th>Dia</th><th>Hora</th><th>Turno</th><th class="n">Pico</th><th class="n">Acima do limite</th><th class="n">Média</th><th class="n">Duração</th><th>Área / rota</th><th>Local de início</th></tr></thead><tbody>`+
+   R.map((e,i)=>`<tr><td>${i+1}º</td><td>${dm(e.d)}</td><td>${e.h}</td><td>${e.u}</td><td class="n pk">${e.vmax} km/h</td><td class="n">+${e.vmax-e.lim} km/h</td><td class="n">${e.vmed} km/h</td><td class="n">${e.fora?'—*':dur(e.s)}</td><td>${esc(e.a)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table></div>'
+   :`<p class="note" style="margin:0">Nenhum excesso em ${t.toLowerCase()}${F.d?' nesse dia':''}.</p>`)+'</div>'};
+ sel('dlg-b').innerHTML=bloco('Estrada de terra','#8a6d1f')+bloco('Rodovia','#22378c')+`<button type="button" class="acao" id="dlg-filtra">${F.f===f?'Tirar o filtro desta frota':'Filtrar o painel por esta frota'}</button>`;
+ sel('dlg-filtra').onclick=()=>{F.f=F.f===f?'':f;if(F.f&&F.g&&grupoDe(f)!==F.g)F.g='';fecha();opts();render()};
+ sel('dlg').hidden=false;sel('dlg-x').focus()}
+function fecha(){sel('dlg').hidden=true}
+sel('dlg-x').addEventListener('click',fecha);sel('dlg').addEventListener('click',e=>{if(e.target.id==='dlg')fecha()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
+document.addEventListener('click',e=>{const a=e.target.closest('[data-fr]');if(!a)return;e.preventDefault();frotaTop(a.dataset.fr)});
+document.addEventListener('keydown',e=>{const a=e.target.closest&&e.target.closest('[data-fr]');if(a&&(e.key==='Enter'||e.key===' ')){e.preventDefault();frotaTop(a.dataset.fr)}});
 opts();render();
 </script>
 

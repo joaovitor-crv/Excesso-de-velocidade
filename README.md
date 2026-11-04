@@ -1,6 +1,6 @@
 # Excessos de velocidade — CRV
 
-Painel dos excessos de velocidade dos caminhões, pranchas e ônibus, com filtros por grupo, frota, dia e via (rodovia ou zona rural).
+Painel dos excessos de velocidade dos caminhões, pranchas e ônibus, com filtros por grupo, frota, dia, turno (A 07–15h, B 15–23h, C 23–07h) e via (rodovia ou estrada de terra). Clicar numa frota abre os 5 maiores excessos dela em estrada de terra e em rodovia.
 
 Abra o `index.html` ou acesse pelo GitHub Pages.
 
@@ -14,10 +14,10 @@ Abra o `index.html` ou acesse pelo GitHub Pages.
 As outras frotas 46 do arquivo ficam de fora. Para mudar, edite `PRANCHAS`, `ONIBUS` e `PREFIXO_CAMINHOES` em `gerar/gerar_painel.py`.
 
 ## Regras
-- **Limites:** os da regra de cada alerta no rastreador — 70 km/h na rodovia e 50 km/h na zona rural; os ônibus 46234 e 46236 têm a regra de van do rastreador, 80 km/h na rodovia.
+- **Limites:** os da regra de cada alerta no rastreador — 70 km/h na rodovia e 50 km/h em estrada de terra; os ônibus 46234 e 46236 têm a regra de van do rastreador, 80 km/h na rodovia.
 - **Sem contar duas vezes:** o rastreador gera um alerta instantâneo e um alerta "(RELATÓRIO)" para o mesmo excesso. O painel usa o "(RELATÓRIO)", que traz duração e velocidade mínima, máxima e média. A regra de van de 80 km/h (46234 e 46236) só existe na versão instantânea e entra como está.
 - **Tempo acima do limite:** soma da duração das ocorrências. Ocorrência com mais de 1 hora (rastreador sem novas leituras) conta, mas o tempo não é somado.
-- **Via:** área ou rota que começa com "Zona Rural" = zona rural; as demais = rodovia.
+- **Via:** excesso com limite de 50 km/h = estrada de terra; 70 km/h ou mais = rodovia.
 
 ## Como atualizar
 1. Exporte do rastreador o **Relatório de Rastreamento — Alertas e notificações** (xlsx).

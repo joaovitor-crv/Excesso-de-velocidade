@@ -24,9 +24,9 @@ ONIBUS = ["46100", "46111", "46221", "46222", "46171", "46122", "46123", "46121"
 PREFIXO_CAMINHOES = "605"  # todas as frotas 605xx do arquivo, menos as pranchas
 VANS = ["46234", "46236"]  # vans: ficam no grupo dos ônibus, com destaque "VAN" no painel (pedido do usuário, 04/11/2026)
 LIMITES = {
-    "Caminhões": "70 km/h na rodovia · 50 km/h na zona rural",
-    "Pranchas": "70 km/h na rodovia · 50 km/h na zona rural",
-    "Ônibus": "70 km/h na rodovia · 50 km/h na zona rural · vans 46234 e 46236: 80 km/h na rodovia",
+    "Caminhões": "70 km/h na rodovia · 50 km/h em estrada de terra",
+    "Pranchas": "70 km/h na rodovia · 50 km/h em estrada de terra",
+    "Ônibus": "70 km/h na rodovia · 50 km/h em estrada de terra · vans 46234 e 46236: 80 km/h na rodovia",
 }
 
 
@@ -92,7 +92,7 @@ def main():
         vmin, vmax, vmed = int(v[0]), int(v[1]), int(v[2])
         lim = int(re.search(r"(\d+) KM/H", x["regra"]).group(1))
         area = x["area"].strip("[]").title().replace(" - ", " – ")
-        tipo = "Zona rural" if area.startswith("Zona Rural") else "Rodovia"
+        tipo = "Estrada de terra" if lim <= 50 else "Rodovia"  # usuário (04/11/2026): 50 km/h = estrada de terra; 70 km/h ou mais = rodovia
         s = seg(x["dur"])
         fora = s > DUR_MAX
         if fora:
