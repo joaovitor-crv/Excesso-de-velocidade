@@ -170,7 +170,7 @@ function render(){
   const pf={};l.forEach(e=>{pf[e.f]=(pf[e.f]||0)+1});const tf=Object.entries(pf).sort((a,b)=>b[1]-a[1])[0];const G=Object.keys(COR);
   return `<button type="button" class="turno" style="--c:${c}" data-u="${k}" aria-pressed="${F.u===k}"><span class="tt"><b>Turno ${k} · ${h}</b><span>${NF(0)(l.length)}</span></span>`+
    `<span class="bar">${G.map(g=>{const n=l.filter(e=>e.g===g).length;return n?`<i style="width:${n/Math.max(1,l.length)*100}%;background:${COR[g]}" title="${g}: ${n}"></i>`:''}).join('')}</span>`+
-   `<span class="f"><span><strong>${NF(0)(l.length/tot*100)}%</strong> das ocorrências</span><span>Tempo <strong>${dur(soma(l))}</strong></span><span>Pico <strong style="color:var(--bad)">${pk?pk.vmax+' km/h':'—'}</strong></span></span>`+
+   `<span class="f"><span><strong>${NF(0)(l.length/tot*100)}%</strong> das ocorrências</span><span>Pico <strong style="color:var(--bad)">${pk?pk.vmax+' km/h':'—'}</strong></span></span>`+
    `<span class="f"><span>Rodovia <strong>${NF(0)(l.filter(e=>e.t==='Rodovia').length)}</strong></span><span>Estrada de terra <strong>${NF(0)(l.filter(e=>e.t==='Estrada de terra').length)}</strong></span></span>`+
    `<small>${pk?`Maior pico: ${vanT(pk.f)} em ${dm(pk.d)} às ${pk.h.slice(0,5)}`:''}${tf?` · mais ocorrências: ${vanT(tf[0])} (${tf[1]})`:''}</small></button>`}).join('')})();
  /* por frota */
