@@ -24,7 +24,7 @@ h1{margin:0;color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.02e
 .filtros select{font:600 12px var(--font);color:var(--ink);border:1px solid var(--navy);border-radius:4px;padding:3px 6px;background:#fff}
 .filtros button{font:700 12px var(--font);border-radius:4px;padding:4px 10px;border:1px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
 .filtros button:focus-visible,.filtros select:focus-visible{outline:2px solid var(--navy-2);outline-offset:2px}
-.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .kpi{background:var(--card);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .kpi .l{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 .kpi .v{color:var(--navy);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -153,7 +153,6 @@ function render(){
  sel('kpis').innerHTML=[
   `<div class="kpi hero"><span class="l">Velocidade máxima</span><span class="v">${pk?pk.vmax+' km/h':'—'}</span><span class="s">${pk?`${pk.f} (${isVan(pk.f)?'van, '+pk.g.toLowerCase():pk.g.toLowerCase()}) · ${dm(pk.d)} ${pk.h.slice(0,5)} · limite ${pk.lim}`:'sem ocorrências'}</span></div>`,
   `<div class="kpi"><span class="l">Ocorrências</span><span class="v">${NF(0)(L.length)}</span><span class="s">${NF(0)(L.filter(e=>e.t==='Rodovia').length)} em rodovia · ${NF(0)(L.filter(e=>e.t==='Estrada de terra').length)} em estrada de terra</span></div>`,
-  `<div class="kpi"><span class="l">Tempo acima do limite</span><span class="v">${dur(soma(L))}</span><span class="s">média de ${dur(Math.round(soma(L)/Math.max(1,L.filter(e=>e.s!=null).length)))} por ocorrência</span></div>`,
   `<div class="kpi"><span class="l">Pico médio acima do limite</span><span class="v">+${NF(1)(acima)} km/h</span><span class="s">pico da ocorrência − limite da regra</span></div>`,
   `<div class="kpi"><span class="l">Frotas com excesso</span><span class="v">${nf} de ${tot}</span><span class="s">${tot-nf?ALL.filter(f=>(!F.g||grupoDe(f)===F.g)&&(!F.f||f===F.f)&&!L.some(e=>e.f===f)).join(', ')+' sem excesso':'todas tiveram excesso'}</span></div>`].join('');
  /* resumo */
