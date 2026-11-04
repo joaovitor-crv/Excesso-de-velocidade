@@ -9,7 +9,7 @@ Abra o `index.html` ou acesse pelo GitHub Pages.
 ## Frotas
 - **Caminhões:** todas as frotas 605xx do arquivo, menos as pranchas
 - **Pranchas:** 60521, 60530, 60524, 60543
-- **Ônibus:** 46100, 46111, 46221, 46222, 46171, 46122, 46123, 46121, 46226, 46118, 46225, 46114, 46234, 46236
+- **Ônibus:** 46100, 46111, 46221, 46222, 46171, 46122, 46123, 46121, 46226, 46118, 46225, 46114, mais as **vans** 46234 e 46236 (no mesmo grupo, marcadas como VAN)
 
 As outras frotas 46 do arquivo ficam de fora. Para mudar, edite `PRANCHAS`, `ONIBUS` e `PREFIXO_CAMINHOES` em `gerar/gerar_painel.py`.
 

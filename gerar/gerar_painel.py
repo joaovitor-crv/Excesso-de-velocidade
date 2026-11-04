@@ -22,10 +22,11 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 PRANCHAS = ["60521", "60530", "60524", "60543"]
 ONIBUS = ["46100", "46111", "46221", "46222", "46171", "46122", "46123", "46121", "46226", "46118", "46225", "46114", "46234", "46236"]
 PREFIXO_CAMINHOES = "605"  # todas as frotas 605xx do arquivo, menos as pranchas
+VANS = ["46234", "46236"]  # vans: ficam no grupo dos ônibus, com destaque "VAN" no painel (pedido do usuário, 04/11/2026)
 LIMITES = {
     "Caminhões": "70 km/h na rodovia · 50 km/h na zona rural",
     "Pranchas": "70 km/h na rodovia · 50 km/h na zona rural",
-    "Ônibus": "70 km/h na rodovia · 50 km/h na zona rural · 46234 e 46236: 80 km/h na rodovia (regra de van do rastreador)",
+    "Ônibus": "70 km/h na rodovia · 50 km/h na zona rural · vans 46234 e 46236: 80 km/h na rodovia",
 }
 
 
@@ -105,7 +106,7 @@ def main():
     br = lambda d: f"{d[8:]}/{d[5:7]}/{d[:4]}"
     cortados = [d for d in dias_arq if not ini <= d <= fim]
     com = {e[0] for e in ev}
-    D = dict(ev=ev, frotas=FROTAS, limites=LIMITES, ini=f"{br(ini)} 00:00", fim=f"{br(fim)} 23:59",
+    D = dict(ev=ev, frotas=FROTAS, limites=LIMITES, vans=VANS, ini=f"{br(ini)} 00:00", fim=f"{br(fim)} 23:59",
              fora=len({x["frota"] for x in todas} - set(grupo)), sem=[f for f in grupo if f not in com], longas=longas,
              cortado=("O arquivo também trazia " + ", ".join(br(d)[:5] for d in cortados) + ", que ficou de fora.") if cortados else "")
     html = open(os.path.join(AQUI, "modelo.html"), encoding="utf-8").read().replace("__DADOS__", json.dumps(D, ensure_ascii=False))
