@@ -21,11 +21,12 @@ As outras frotas 46 do arquivo ficam de fora. Para mudar, edite `PRANCHAS`, `ONI
 
 ## Como atualizar
 1. Exporte do rastreador o **Relatório de Rastreamento — Alertas e notificações** (xlsx).
-2. Rode:
+2. Importe na base histórica (repositório privado `excessos-base`) e gere o painel pelo período:
    ```
-   python3 gerar/gerar_painel.py --xlsx Relatorio_Rastreamento_Alertasenotificacoes.xlsx --ini 2026-11-01 --fim 2026-11-03
+   python3 ../excessos-base/scripts/importar.py Relatorio_Rastreamento_Alertasenotificacoes.xlsx
+   python3 gerar/gerar_painel.py --base ../excessos-base/dados/alertas.csv --ini 2026-11-01 --fim 2026-11-03
    ```
-   Sem `--ini`/`--fim`, usa todos os dias do arquivo.
+   Também dá para gerar direto do xlsx: `--xlsx <arquivo>` no lugar de `--base`. Sem `--ini`/`--fim`, usa todos os dias.
 3. Faça commit e push do `index.html`.
 
 Precisa de Python 3 com `openpyxl`. Para mudar o visual, edite `gerar/modelo.html` (os dados entram no lugar de `__DADOS__`).

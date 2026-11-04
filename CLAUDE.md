@@ -3,8 +3,11 @@
 Ao gerar ou atualizar o painel, use sempre o gerador. Não redesenhe a página à mão.
 
 ```
+python3 gerar/gerar_painel.py --base ../excessos-base/dados/alertas.csv --ini AAAA-MM-DD --fim AAAA-MM-DD
 python3 gerar/gerar_painel.py --xlsx <Relatorio_Rastreamento_Alertasenotificacoes.xlsx> [--ini AAAA-MM-DD --fim AAAA-MM-DD]
 ```
+
+- Base histórica (04/11/2026): repositório privado `joaovitor-crv/excessos-base`. Relatório novo → `python3 scripts/importar.py <xlsx>` lá (reenviar um dia substitui o dia), commit e push da base; depois gere o painel com `--base`. Os dois caminhos geram o mesmo painel (ordem fixa: dia, hora, frota, limite).
 
 ## Padrão aprovado pelo usuário (04/11/2026)
 - Entrada: "Relatório de Rastreamento — Alertas e notificações" (xlsx). O arquivo vem com o tamanho da planilha errado (A1:C1): o leitor usa `reset_dimensions()`.

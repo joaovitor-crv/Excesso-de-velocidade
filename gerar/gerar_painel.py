@@ -1,14 +1,17 @@
 """Gera o index.html do painel de excessos de velocidade (CRV).
 
 Uso:
-  python3 gerar/gerar_painel.py --xlsx Relatorio_Rastreamento_Alertasenotificacoes.xlsx [--ini 2026-11-01 --fim 2026-11-03]
+  python3 gerar/gerar_painel.py --base ../excessos-base/dados/alertas.csv --ini 2026-11-01 --fim 2026-11-03
+  python3 gerar/gerar_painel.py --xlsx Relatorio_Rastreamento_Alertasenotificacoes.xlsx [--ini ... --fim ...]
 
-Entrada: exportação "Relatório de Rastreamento — Alertas e notificações" (xlsx) do rastreador.
+Entrada: a base histórica (repositório excessos-base, dados/alertas.csv) ou direto o
+"Relatório de Rastreamento — Alertas e notificações" (xlsx) do rastreador.
 Frotas e grupos: FROTAS abaixo. Limites: os da própria regra de cada alerta.
 
 Desenvolvido por João Vitor - CRV
 """
 import argparse
+import csv
 import json
 import os
 import re
@@ -61,15 +64,31 @@ def ler(caminho):
     return out
 
 
+def ler_base(caminho):
+    """Lê a base histórica (excessos-base/dados/alertas.csv) no mesmo formato do xlsx."""
+    out = []
+    with open(caminho, encoding="utf-8", newline="") as fh:
+        for r in csv.DictReader(fh):
+            s = int(r["duracao_s"] or 0)
+            out.append(dict(frota=r["frota"], regra=r["regra"], data=f'{r["data"][8:]}/{r["data"][5:7]}/{r["data"][:4]}', hora=r["hora"],
+                            dur=f"{s // 3600:02d}:{s % 3600 // 60:02d}:{s % 60:02d}",
+                            tel=f'[Velocidade: {r["vel_min"]} | {r["vel_max"]} | {r["vel_media"]}]' if r["vel_max"] else "",
+                            area=f'[{r["area"]}]', loc=r["local_inicio"]))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--xlsx", required=True)
+    ap.add_argument("--xlsx", help="relatório de alertas do rastreador (xlsx)")
+    ap.add_argument("--base", help="base histórica: excessos-base/dados/alertas.csv")
     ap.add_argument("--ini", help="primeiro dia (AAAA-MM-DD); padrão: o primeiro do arquivo")
     ap.add_argument("--fim", help="último dia (AAAA-MM-DD); padrão: o último do arquivo")
     ap.add_argument("--saida", default=os.path.join(AQUI, "..", "index.html"))
     a = ap.parse_args()
 
-    todas = ler(a.xlsx)
+    if bool(a.xlsx) == bool(a.base):
+        raise SystemExit("Informe --base (base histórica) ou --xlsx (relatório do rastreador).")
+    todas = ler_base(a.base) if a.base else ler(a.xlsx)
     FROTAS = grupos({x["frota"] for x in todas})
     grupo = {f: g for g, L in FROTAS.items() for f in L}
     dias_arq = sorted({datetime.strptime(x["data"], "%d/%m/%Y").strftime("%Y-%m-%d") for x in todas})
@@ -101,7 +120,7 @@ def main():
         if fora:
             e.append(1)
         ev.append(e)
-    ev.sort(key=lambda e: (e[2], e[3]))
+    ev.sort(key=lambda e: (e[2], e[3], e[0], e[8]))  # dia, hora, frota, limite
 
     br = lambda d: f"{d[8:]}/{d[5:7]}/{d[:4]}"
     cortados = [d for d in dias_arq if not ini <= d <= fim]
