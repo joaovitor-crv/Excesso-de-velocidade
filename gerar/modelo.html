@@ -48,6 +48,11 @@ h1{margin:0;color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.02e
 .card{background:var(--card);border-radius:10px;overflow:hidden;min-width:0}
 .card>h2{margin:0;background:var(--navy);color:#fff;text-align:center;font-size:12px;font-weight:600;padding:4px 8px;text-transform:uppercase}
 .cb{padding:10px 12px 12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
+.rg{border:1px solid #dfe4ef;border-radius:8px;overflow:hidden;min-width:0}
+.rg>header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 10px;background:#eef1f8;border-top:4px solid var(--c)}
+.rg>header b{font-size:13px;color:#1d2433}.rg>header span{font-size:11px;color:var(--muted)}.rg>header strong{font-size:15px;color:#1d2433}
+.rg .rb{padding:8px 8px 6px}.rg table{font-size:11.5px}.rg .loc{max-width:150px}
 .note{font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.45}
 .leg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:6px}
 .leg i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
@@ -79,7 +84,7 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
 a.lkf{color:var(--navy-2);text-decoration:underline;cursor:pointer;font-weight:700}
 .tag.lkf{cursor:pointer;text-decoration:underline}
 .ass{text-align:center;font-size:12px;opacity:.6;padding:12px 0 0}
-@media (max-width:1050px){.grid{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1050px){.grid,.grid3{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:640px){.turnos{grid-template-columns:minmax(0,1fr)}.top{grid-template-columns:1fr}.kpis,.grupos{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 </style>
 </head><body>
@@ -102,13 +107,11 @@ a.lkf{color:var(--navy-2);text-decoration:underline;cursor:pointer;font-weight:7
  <div class="lead" id="lead"></div>
  <div class="grupos" id="grupos"></div>
  <section class="card"><h2>Excessos por turno</h2><div class="cb"><div class="turnos" id="turnos"></div><p class="note">Turno pela hora de início da ocorrência: A 07–15h, B 15–23h, C 23–07h. Clique num turno para filtrar o painel.</p></div></section>
+ <section class="card"><h2>Excessos por frota — um cartão por regra</h2><div class="cb"><div class="leg" id="leg-f"></div><div class="grid3" id="rg-frota"></div><p class="note">Cada cartão é uma regra do rastreador. Barra na cor do grupo; à direita, o pico de velocidade da frota naquela regra. <b>Clique numa frota para ver os 5 maiores excessos dela em cada tipo de via.</b></p></div></section>
+ <section class="card"><h2>10 maiores velocidades — um cartão por regra</h2><div class="cb"><div class="grid3" id="rg-top"></div><p class="note">O maior pico de cada frota na regra, uma linha por frota. <b>Clique na frota para ver os 10 maiores excessos dela naquela regra.</b></p></div></section>
  <div class="grid">
-  <section class="card"><h2>Excessos por frota</h2><div class="cb"><div class="leg" id="leg-f"></div><div class="tw" style="max-height:640px"><div class="chart" id="c-frota"></div></div><p class="note">Barra cheia = rodovia (70 km/h ou mais); parte clara = estrada de terra (50 km/h). À direita, o pico de velocidade. <b>Clique numa frota para ver os 5 maiores excessos dela em cada tipo de via.</b></p></div></section>
   <section class="card"><h2>Excessos por dia e por hora</h2><div class="cb"><div class="leg" id="leg-d"></div><div class="chart" id="c-dia"></div><div class="chart" id="c-hora" style="margin-top:10px"></div><p class="note">Hora de início da ocorrência. Clique num dia para filtrar.</p></div></section>
- </div>
- <div class="grid">
   <section class="card"><h2>Onde acontecem</h2><div class="cb"><div class="chart" id="c-area"></div><p class="note">Área ou rota cadastrada no rastreador para a ocorrência, com o pico de velocidade em cada uma. <b>Clique numa área para ver os 20 maiores excessos dela.</b></p></div></section>
-  <section class="card"><h2>10 maiores velocidades</h2><div class="cb"><p class="note" style="margin:0 0 6px">O maior pico de cada frota, uma linha por frota. <b>Clique na frota para ver os 10 maiores excessos dela.</b></p><div class="tw"><table><thead><tr><th>Frota</th><th>Dia</th><th>Hora</th><th class="n">Pico</th><th class="n">Limite</th><th>Local</th></tr></thead><tbody id="t-top"></tbody></table></div></div></section>
  </div>
  <section class="card"><h2>Ocorrências</h2><div class="cb"><div class="ord"><button type="button" data-o="h" aria-pressed="true">Por horário</button><button type="button" data-o="p" aria-pressed="false">Por pico</button><button type="button" data-o="d" aria-pressed="false">Por duração</button></div>
   <div class="tw scroll"><table><thead><tr><th>Frota</th><th>Grupo</th><th>Dia</th><th>Hora</th><th>Turno</th><th class="n">Duração</th><th class="n">Velocidade (mín · máx · média)</th><th class="n">Limite</th><th>Área / rota</th><th>Local de início</th></tr></thead><tbody id="t-oc"></tbody></table></div>
@@ -125,6 +128,9 @@ const NF=d=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:d,maximumFracti
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const COR={'Caminhões':'#6f4fb0','Pranchas':'#e8963a','Ônibus':'#22378c'},CLARO={'Caminhões':'#c9b9ea','Pranchas':'#f4c99a','Ônibus':'#9fb0e6'};
 const E=D.ev.map(e=>({f:e[0],g:e[1],d:e[2],h:e[3],s:e[4],vmin:e[5],vmax:e[6],vmed:e[7],lim:e[8],t:e[9],a:e[10],loc:e[11],fora:!!e[12]}));
+/* regras do rastreador (uma por limite), da que tem mais ocorrências para a que tem menos */
+const REGRAS=[...new Set(E.map(e=>e.lim))].map(lim=>{const l=E.filter(e=>e.lim===lim),van=l.every(e=>D.vans.includes(e.f));
+ return {lim,n:l.length,nome:`Regra ${lim} km/h${van?' · van':''}`,via:(lim<=50?'Estrada de terra':'Rodovia')+(van?' · vans 46234 e 46236':''),cor:van?'#1f7a6e':lim<=50?'#c99a2e':'#22378c'}}).sort((a,b)=>b.n-a.n);
 const dm=d=>d.slice(8,10)+'/'+d.slice(5,7);
 const dur=s=>{if(s==null)return '—';const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?`${h}h${String(m).padStart(2,'0')}min`:m?`${m}min${x?String(x).padStart(2,'0')+'s':''}`:`${x}s`};
 const ALL=Object.values(D.frotas).flat();
@@ -172,20 +178,22 @@ function render(){
    `<span class="f"><span><strong>${NF(0)(l.length/tot*100)}%</strong> das ocorrências</span><span>Pico <strong style="color:var(--bad)">${pk?pk.vmax+' km/h':'—'}</strong></span></span>`+
    `<span class="f"><span>Rodovia <strong>${NF(0)(l.filter(e=>e.t==='Rodovia').length)}</strong></span><span>Estrada de terra <strong>${NF(0)(l.filter(e=>e.t==='Estrada de terra').length)}</strong></span></span>`+
    `<small>${pk?`Maior pico: ${vanT(pk.f)} em ${dm(pk.d)} às ${pk.h.slice(0,5)}`:''}${tf?` · mais ocorrências: ${vanT(tf[0])} (${tf[1]})`:''}</small></button>`}).join('')})();
- /* por frota */
- (()=>{const Lf=filtra('f');const fs=ALL.filter(f=>(!F.g||grupoDe(f)===F.g)).map(f=>{const l=Lf.filter(e=>e.f===f);return {f,g:grupoDe(f),r:l.filter(e=>e.t==='Rodovia').length,z:l.filter(e=>e.t==='Estrada de terra').length,n:l.length,p:l.reduce((a,e)=>Math.max(a,e.vmax),0)}}).sort((a,b)=>b.n-a.n);
-  const box=sel('c-frota'),W=620,rh=24,lw=120,vw=70,H=fs.length*rh+6,s=svg(box,W,H),T=tip(box),mx=Math.max(1,...fs.map(x=>x.n)),bw=W-lw-vw-40;
-  fs.forEach((x,i)=>{const y=i*rh+3,w1=bw*x.r/mx,w2=bw*x.z/mx,on=!F.f||F.f===x.f;const g=el('g',{style:'cursor:pointer',opacity:on?1:.35},s);
-   el('text',{x:lw-8,y:y+14,'text-anchor':'end','font-size':12,'font-weight':F.f===x.f?800:600,fill:'#1d2433'},g,x.f);
-   if(isVan(x.f)){el('rect',{x:lw-104+12,y:y+4,width:30,height:13,rx:6,fill:'#e3f4f1',stroke:'#9fd6cd'},g);el('text',{x:lw-104+27,y:y+14,'text-anchor':'middle','font-size':9,'font-weight':800,fill:'#1f7a6e'},g,'VAN')}
-   el('rect',{x:lw-104,y:y+5,width:8,height:8,rx:2,fill:COR[x.g]},g);
-   if(x.r)el('rect',{x:lw,y:y+3,width:Math.max(2,w1),height:rh-8,rx:2,fill:COR[x.g]},g);
-   if(x.z)el('rect',{x:lw+w1,y:y+3,width:Math.max(2,w2),height:rh-8,rx:2,fill:CLARO[x.g]},g);
-   el('text',{x:lw+w1+w2+5,y:y+14,'font-size':11.5,'font-weight':700,fill:'#1d2433'},g,x.n?NF(0)(x.n):'0');
-   el('text',{x:W-4,y:y+14,'text-anchor':'end','font-size':11.5,'font-weight':700,fill:x.p?'#d64550':'#5b6475'},g,x.p?x.p+' km/h':'sem excesso');
-   el('rect',{x:0,y,width:W,height:rh,fill:'transparent'},g);
-   g.addEventListener('mousemove',ev=>T(ev,`<b>${x.f}</b> · ${isVan(x.f)?'van (no grupo '+x.g.toLowerCase()+')':x.g}<br>${x.n} ocorrências (${x.r} rodovia · ${x.z} estrada de terra) · pico ${x.p||'—'} km/h`));g.addEventListener('mouseleave',()=>T());
-   g.addEventListener('click',()=>frotaTop(x.f))});})();
+ /* por frota, um cartão por regra */
+ (()=>{const Lf=filtra('f');const cx=sel('rg-frota');cx.innerHTML=REGRAS.map(r=>{const l=Lf.filter(e=>e.lim===r.lim);return `<div class="rg" style="--c:${r.cor}"><header><span><b>${r.nome}</b><br>${r.via}</span><strong>${NF(0)(l.length)}</strong></header><div class="rb tw" style="max-height:560px"><div class="chart" data-lim="${r.lim}"></div></div></div>`}).join('');
+  REGRAS.forEach(r=>{const l=Lf.filter(e=>e.lim===r.lim);const m={};l.forEach(e=>{const x=m[e.f]=m[e.f]||{f:e.f,g:e.g,n:0,p:0};x.n++;x.p=Math.max(x.p,e.vmax)});
+   const fs=Object.values(m).sort((a,b)=>b.n-a.n||b.p-a.p||a.f.localeCompare(b.f));const box=cx.querySelector(`[data-lim="${r.lim}"]`);
+   if(!fs.length){box.innerHTML='<p class="note" style="margin:4px 2px">Sem ocorrências nessa regra.</p>';return}
+   const W=420,rh=22,lw=96,vw=62,H=fs.length*rh+4,s=svg(box,W,H),T=tip(box),mx=Math.max(1,...fs.map(x=>x.n)),bw=W-lw-vw-34;
+   fs.forEach((x,i)=>{const y=i*rh+2,w=Math.max(2,bw*x.n/mx),on=!F.f||F.f===x.f;const g=el('g',{style:'cursor:pointer',opacity:on?1:.35},s);
+    el('rect',{x:2,y:y+6,width:8,height:8,rx:2,fill:COR[x.g]},g);
+    el('text',{x:14,y:y+14,'font-size':12,'font-weight':F.f===x.f?800:600,fill:'#1d2433'},g,x.f);
+    if(isVan(x.f)){el('rect',{x:58,y:y+4,width:30,height:13,rx:6,fill:'#e3f4f1',stroke:'#9fd6cd'},g);el('text',{x:73,y:y+14,'text-anchor':'middle','font-size':9,'font-weight':800,fill:'#1f7a6e'},g,'VAN')}
+    el('rect',{x:lw,y:y+3,width:w,height:rh-7,rx:2,fill:COR[x.g]},g);
+    el('text',{x:lw+w+5,y:y+14,'font-size':11.5,'font-weight':700,fill:'#1d2433'},g,NF(0)(x.n));
+    el('text',{x:W-3,y:y+14,'text-anchor':'end','font-size':11.5,'font-weight':700,fill:'#d64550'},g,x.p+' km/h');
+    el('rect',{x:0,y,width:W,height:rh,fill:'transparent'},g);
+    g.addEventListener('mousemove',ev=>T(ev,`<b>${x.f}</b> · ${isVan(x.f)?'van (no grupo '+x.g.toLowerCase()+')':x.g}<br>${r.nome}: ${x.n} ocorrências · pico ${x.p} km/h`));g.addEventListener('mouseleave',()=>T());
+    g.addEventListener('click',()=>{T();frotaTop(x.f)})})})})();
  sel('leg-f').innerHTML=Object.keys(COR).map(g=>`<span><i style="background:${COR[g]}"></i>${g}</span>`).join('');
  /* por dia (empilhado por grupo) e por hora */
  (()=>{const Ld=filtra('d');const G=Object.keys(COR);const W=620,H=170,l=34,b=26,t=18;const box=sel('c-dia'),s=svg(box,W,H),T=tip(box);
@@ -216,9 +224,13 @@ function render(){
    el('text',{x:lw+w+5,y:y+16,'font-size':11.5,'font-weight':700,fill:'#1d2433'},s,NF(0)(r.n));
    el('text',{x:W-4,y:y+16,'text-anchor':'end','font-size':11.5,'font-weight':700,fill:'#d64550'},s,`pico ${r.p} km/h`);
    const hit=el('rect',{x:0,y,width:W,height:rh,fill:'transparent',style:'cursor:pointer'},s);[b,hit].forEach(z=>{z.addEventListener('mousemove',ev=>T(ev,`<b>${esc(r.a)}</b><br>${r.n} ocorrências · pico ${r.p} km/h · clique para ver os 20 maiores excessos`));z.addEventListener('mouseleave',()=>T());z.addEventListener('click',()=>{T();areaTop(r.a)})})});})();
- /* top 10 */
- const mel={};[...L].sort((a,b)=>b.vmax-a.vmax||(a.d+a.h).localeCompare(b.d+b.h)).forEach(e=>{if(!mel[e.f])mel[e.f]=e});
- sel('t-top').innerHTML=Object.values(mel).sort((a,b)=>b.vmax-a.vmax||(a.d+a.h).localeCompare(b.d+b.h)).slice(0,10).map(e=>`<tr><td><span class="tag lkf" data-fr="${e.f}" data-top10="1" role="button" tabindex="0" style="--c:${COR[e.g]}">${e.f}</span>${vanH(e.f)}</td><td>${dm(e.d)}</td><td>${e.h.slice(0,5)}</td><td class="n pk">${e.vmax} km/h</td><td class="n">${e.lim}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')||'<tr><td colspan="6">Sem ocorrências.</td></tr>';
+ /* 10 maiores velocidades, um cartão por regra */
+ sel('rg-top').innerHTML=REGRAS.map(r=>{const mel={};[...L].filter(e=>e.lim===r.lim).sort((a,b)=>b.vmax-a.vmax||(a.d+a.h).localeCompare(b.d+b.h)).forEach(e=>{if(!mel[e.f])mel[e.f]=e});
+  const R=Object.values(mel).sort((a,b)=>b.vmax-a.vmax||(a.d+a.h).localeCompare(b.d+b.h)).slice(0,10);
+  return `<div class="rg" style="--c:${r.cor}"><header><span><b>${r.nome}</b><br>${r.via}</span><span>${R.length?'maior: <strong style="color:var(--bad)">'+R[0].vmax+' km/h</strong>':''}</span></header><div class="rb tw">`+
+  (R.length?`<table><thead><tr><th>#</th><th>Frota</th><th>Dia</th><th>Hora</th><th class="n">Pico</th><th>Local</th></tr></thead><tbody>`+
+   R.map((e,i)=>`<tr><td>${i+1}º</td><td><span class="tag lkf" data-fr="${e.f}" data-top10="1" data-lim="${r.lim}" role="button" tabindex="0" style="--c:${COR[e.g]}">${e.f}</span>${vanH(e.f)}</td><td>${dm(e.d)}</td><td>${e.h.slice(0,5)}</td><td class="n pk">${e.vmax} km/h</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table>'
+   :'<p class="note" style="margin:4px 2px">Sem ocorrências nessa regra.</p>')+'</div></div>'}).join('');
  /* ocorrências */
  const o=document.querySelector('.ord [aria-pressed="true"]').dataset.o;
  const ord=[...L].sort(o==='p'?(a,b)=>b.vmax-a.vmax:o==='d'?(a,b)=>(b.s??-1)-(a.s??-1):(a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
@@ -252,9 +264,9 @@ function frotaTop(f){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&(!F.d||e.d=
  sel('dlg-filtra').onclick=()=>{F.f=F.f===f?'':f;if(F.f&&F.g&&grupoDe(f)!==F.g)F.g='';fecha();opts();render()};
  sel('dlg').hidden=false;sel('dlg-x').focus()}
 /* janela da frota a partir das 10 maiores velocidades: os 10 maiores excessos da frota, rodovia e estrada de terra juntos */
-function frotaTop10(f){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&(!F.d||e.d===F.d)&&(!F.u||e.u===F.u)&&(!F.t||e.t===F.t));
+function frotaTop10(f,lim){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&(!lim||e.lim===lim)&&(!F.d||e.d===F.d)&&(!F.u||e.u===F.u)&&(!F.t||e.t===F.t));
  const R=[...L].sort((a,b)=>b.vmax-a.vmax||(b.vmax-b.lim)-(a.vmax-a.lim)||(b.s??0)-(a.s??0)).slice(0,10);
- sel('dlg-t').innerHTML=`Frota ${f}${isVan(f)?' <span class="van">VAN</span>':''} — 10 maiores excessos`;
+ sel('dlg-t').innerHTML=`Frota ${f}${isVan(f)?' <span class="van">VAN</span>':''} — 10 maiores excessos${lim?' · regra '+lim+' km/h':''}`;
  sel('dlg-s').textContent=`${isVan(f)?'Van, no grupo '+g.toLowerCase():g} · ${L.length} ocorrências${F.d?' em '+dm(F.d):` de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}`}${F.u?' no turno '+F.u:''}${F.t?' em '+F.t.toLowerCase():''} · do maior pico para o menor`;
  sel('dlg-b').innerHTML=(R.length?`<div class="tw"><table><thead><tr><th>#</th><th>Dia</th><th>Hora</th><th>Turno</th><th>Via</th><th class="n">Pico</th><th class="n">Limite</th><th class="n">Acima do limite</th><th class="n">Média</th><th class="n">Duração</th><th>Área / rota</th><th>Local de início</th></tr></thead><tbody>`+
   R.map((e,i)=>`<tr><td>${i+1}º</td><td>${dm(e.d)}</td><td>${e.h}</td><td>${e.u}</td><td>${e.t}</td><td class="n pk">${e.vmax} km/h</td><td class="n">${e.lim}</td><td class="n">+${e.vmax-e.lim} km/h</td><td class="n">${e.vmed} km/h</td><td class="n">${e.fora?'—*':dur(e.s)}</td><td>${esc(e.a)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table></div>'
@@ -273,8 +285,8 @@ function areaTop(a){const L=filtra().filter(e=>e.a===a);const R=[...L].sort((x,y
 function fecha(){sel('dlg').hidden=true}
 sel('dlg-x').addEventListener('click',fecha);sel('dlg').addEventListener('click',e=>{if(e.target.id==='dlg')fecha()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
-document.addEventListener('click',e=>{const a=e.target.closest('[data-fr]');if(!a)return;e.preventDefault();a.dataset.top10?frotaTop10(a.dataset.fr):frotaTop(a.dataset.fr)});
-document.addEventListener('keydown',e=>{const a=e.target.closest&&e.target.closest('[data-fr]');if(a&&(e.key==='Enter'||e.key===' ')){e.preventDefault();a.dataset.top10?frotaTop10(a.dataset.fr):frotaTop(a.dataset.fr)}});
+document.addEventListener('click',e=>{const a=e.target.closest('[data-fr]');if(!a)return;e.preventDefault();a.dataset.top10?frotaTop10(a.dataset.fr,+a.dataset.lim||0):frotaTop(a.dataset.fr)});
+document.addEventListener('keydown',e=>{const a=e.target.closest&&e.target.closest('[data-fr]');if(a&&(e.key==='Enter'||e.key===' ')){e.preventDefault();a.dataset.top10?frotaTop10(a.dataset.fr,+a.dataset.lim||0):frotaTop(a.dataset.fr)}});
 opts();render();
 </script>
 
