@@ -19,7 +19,7 @@ import openpyxl
 AQUI = os.path.dirname(os.path.abspath(__file__))
 
 # Frotas do painel, por grupo (definidas pelo usuário em 04/11/2026). As outras frotas do arquivo ficam de fora.
-PRANCHAS = ["60521", "60530", "60524"]
+PRANCHAS = ["60521", "60530", "60524", "60543"]
 ONIBUS = ["46100", "46111", "46221", "46222", "46171", "46122", "46123", "46121", "46226", "46118", "46225", "46114", "46234", "46236"]
 PREFIXO_CAMINHOES = "605"  # todas as frotas 605xx do arquivo, menos as pranchas
 LIMITES = {
