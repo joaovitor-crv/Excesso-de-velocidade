@@ -19,11 +19,20 @@ import openpyxl
 AQUI = os.path.dirname(os.path.abspath(__file__))
 
 # Frotas do painel, por grupo (definidas pelo usuário em 04/11/2026). As outras frotas do arquivo ficam de fora.
-FROTAS = {
-    "Caminhões": ["46100", "46111", "46221", "46222", "46171", "46122", "46123", "46121", "46226", "46118", "46225", "46114"],
-    "Pranchas": ["60521", "60530", "60524"],
-    "Vans": ["46234", "46236"],
+PRANCHAS = ["60521", "60530", "60524"]
+ONIBUS = ["46100", "46111", "46221", "46222", "46171", "46122", "46123", "46121", "46226", "46118", "46225", "46114", "46234", "46236"]
+PREFIXO_CAMINHOES = "605"  # todas as frotas 605xx do arquivo, menos as pranchas
+LIMITES = {
+    "Caminhões": "70 km/h na rodovia · 50 km/h na zona rural",
+    "Pranchas": "70 km/h na rodovia · 50 km/h na zona rural",
+    "Ônibus": "70 km/h na rodovia · 50 km/h na zona rural · 46234 e 46236: 80 km/h na rodovia (regra de van do rastreador)",
 }
+
+
+def grupos(frotas_arquivo):
+    """Grupos do painel: caminhões (605xx do arquivo, menos pranchas), pranchas e ônibus (lista fixa)."""
+    cam = sorted(f for f in frotas_arquivo if f.startswith(PREFIXO_CAMINHOES) and f not in PRANCHAS)
+    return {"Caminhões": cam, "Pranchas": PRANCHAS, "Ônibus": ONIBUS}
 DUR_MAX = 3600  # ocorrência com mais de 1 h sem novas leituras: conta, mas o tempo não é somado
 
 
@@ -59,8 +68,9 @@ def main():
     ap.add_argument("--saida", default=os.path.join(AQUI, "..", "index.html"))
     a = ap.parse_args()
 
-    grupo = {f: g for g, L in FROTAS.items() for f in L}
     todas = ler(a.xlsx)
+    FROTAS = grupos({x["frota"] for x in todas})
+    grupo = {f: g for g, L in FROTAS.items() for f in L}
     dias_arq = sorted({datetime.strptime(x["data"], "%d/%m/%Y").strftime("%Y-%m-%d") for x in todas})
     ini, fim = a.ini or dias_arq[0], a.fim or dias_arq[-1]
 
@@ -69,7 +79,7 @@ def main():
         if x["frota"] not in grupo:
             continue
         # sem contar duas vezes: o rastreador gera um alerta instantâneo e um "(RELATÓRIO)" para o mesmo excesso;
-        # usa-se o "(RELATÓRIO)". A regra de 80 km/h das vans só existe na versão instantânea.
+        # usa-se o "(RELATÓRIO)". A regra de van de 80 km/h (ônibus 46234 e 46236) só existe na versão instantânea.
         if "RELATÓRIO" not in x["regra"] and "80 KM/H - VAN" not in x["regra"]:
             continue
         dia = datetime.strptime(x["data"], "%d/%m/%Y").strftime("%Y-%m-%d")
@@ -95,7 +105,7 @@ def main():
     br = lambda d: f"{d[8:]}/{d[5:7]}/{d[:4]}"
     cortados = [d for d in dias_arq if not ini <= d <= fim]
     com = {e[0] for e in ev}
-    D = dict(ev=ev, frotas=FROTAS, ini=f"{br(ini)} 00:00", fim=f"{br(fim)} 23:59",
+    D = dict(ev=ev, frotas=FROTAS, limites=LIMITES, ini=f"{br(ini)} 00:00", fim=f"{br(fim)} 23:59",
              fora=len({x["frota"] for x in todas} - set(grupo)), sem=[f for f in grupo if f not in com], longas=longas,
              cortado=("O arquivo também trazia " + ", ".join(br(d)[:5] for d in cortados) + ", que ficou de fora.") if cortados else "")
     html = open(os.path.join(AQUI, "modelo.html"), encoding="utf-8").read().replace("__DADOS__", json.dumps(D, ensure_ascii=False))

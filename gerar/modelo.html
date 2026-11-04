@@ -67,9 +67,9 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
  <div class="top">
   <div class="logo"><img src="logo-crv.png" alt="CRV Industrial — Açúcar, Etanol e Energia"></div>
   <div class="hdr">
-   <div class="hdr-row"><h1>Excessos de velocidade — caminhões, pranchas e vans</h1><span class="periodo" id="per"></span></div>
+   <div class="hdr-row"><h1>Excessos de velocidade — caminhões, pranchas e ônibus</h1><span class="periodo" id="per"></span></div>
    <div class="filtros">
-    <label>Grupo <select id="f-g"><option value="">Todos</option><option>Caminhões</option><option>Pranchas</option><option>Vans</option></select></label>
+    <label>Grupo <select id="f-g"><option value="">Todos</option><option>Caminhões</option><option>Pranchas</option><option>Ônibus</option></select></label>
     <label>Frota <select id="f-f"></select></label>
     <label>Dia <select id="f-d"></select></label>
     <label>Via <select id="f-t"><option value="">Todas</option><option>Rodovia</option><option>Zona rural</option></select></label>
@@ -81,7 +81,7 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
  <div class="lead" id="lead"></div>
  <div class="grupos" id="grupos"></div>
  <div class="grid">
-  <section class="card"><h2>Excessos por frota</h2><div class="cb"><div class="leg" id="leg-f"></div><div class="chart" id="c-frota"></div><p class="note">Barra cheia = rodovia; parte clara = zona rural. À direita, o pico de velocidade. Clique numa frota para filtrar.</p></div></section>
+  <section class="card"><h2>Excessos por frota</h2><div class="cb"><div class="leg" id="leg-f"></div><div class="tw" style="max-height:640px"><div class="chart" id="c-frota"></div></div><p class="note">Barra cheia = rodovia; parte clara = zona rural. À direita, o pico de velocidade. Clique numa frota para filtrar.</p></div></section>
   <section class="card"><h2>Excessos por dia e por hora</h2><div class="cb"><div class="leg" id="leg-d"></div><div class="chart" id="c-dia"></div><div class="chart" id="c-hora" style="margin-top:10px"></div><p class="note">Hora de início da ocorrência. Clique num dia para filtrar.</p></div></section>
  </div>
  <div class="grid">
@@ -98,11 +98,11 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
 const D=__DADOS__;
 const NF=d=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}).format;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const COR={'Caminhões':'#22378c','Pranchas':'#e8963a','Vans':'#2e9e8f'},CLARO={'Caminhões':'#9fb0e6','Pranchas':'#f4c99a','Vans':'#9fd6cd'};
+const COR={'Caminhões':'#6f4fb0','Pranchas':'#e8963a','Ônibus':'#22378c'},CLARO={'Caminhões':'#c9b9ea','Pranchas':'#f4c99a','Ônibus':'#9fb0e6'};
 const E=D.ev.map(e=>({f:e[0],g:e[1],d:e[2],h:e[3],s:e[4],vmin:e[5],vmax:e[6],vmed:e[7],lim:e[8],t:e[9],a:e[10],loc:e[11],fora:!!e[12]}));
 const dm=d=>d.slice(8,10)+'/'+d.slice(5,7);
 const dur=s=>{if(s==null)return '—';const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?`${h}h${String(m).padStart(2,'0')}min`:m?`${m}min${x?String(x).padStart(2,'0')+'s':''}`:`${x}s`};
-const ALL=[...D.frotas['Caminhões'],...D.frotas['Pranchas'],...D.frotas['Vans']];
+const ALL=Object.values(D.frotas).flat();
 const grupoDe=f=>Object.keys(D.frotas).find(g=>D.frotas[g].includes(f));
 const DIAS=[...new Set(E.map(e=>e.d))].sort();
 const F={g:'',f:'',d:'',t:''};
@@ -134,8 +134,8 @@ function render(){
   (pk?`O maior pico foi de <b>${pk.vmax} km/h</b> na ${pk.f}, na ${esc(pk.a)} (limite ${pk.lim} km/h).`:''):'Nenhuma ocorrência com esses filtros.';
  /* grupos */
  const Lg=filtra('g');
- sel('grupos').innerHTML=Object.keys(D.frotas).map(g=>{const l=Lg.filter(e=>e.g===g),p=l.reduce((a,e)=>Math.max(a,e.vmax),0);const lims=g==='Vans'?'80 km/h rodovia · 50 zona rural':'70 km/h rodovia · 50 zona rural';
-  return `<button type="button" class="gcard" style="--c:${COR[g]}" data-g="${g}" aria-pressed="${F.g===g}"><b>${g} <small>(${D.frotas[g].join(', ')})</small></b><span class="f"><span>Ocorrências <strong>${NF(0)(l.length)}</strong></span><span>Tempo <strong>${dur(soma(l))}</strong></span><span>Pico <strong style="color:var(--bad)">${p||'—'}${p?' km/h':''}</strong></span></span><small>Limites: ${lims}</small></button>`}).join('');
+ sel('grupos').innerHTML=Object.keys(D.frotas).map(g=>{const l=Lg.filter(e=>e.g===g),p=l.reduce((a,e)=>Math.max(a,e.vmax),0);const lims=(D.limites||{})[g]||'';const fl=D.frotas[g].length>6?`${D.frotas[g].length} frotas`:D.frotas[g].join(', ');
+  return `<button type="button" class="gcard" style="--c:${COR[g]}" data-g="${g}" aria-pressed="${F.g===g}"><b>${g} <small>(${fl})</small></b><span class="f"><span>Ocorrências <strong>${NF(0)(l.length)}</strong></span><span>Tempo <strong>${dur(soma(l))}</strong></span><span>Pico <strong style="color:var(--bad)">${p||'—'}${p?' km/h':''}</strong></span></span><small>Limites: ${lims}</small></button>`}).join('');
  /* por frota */
  (()=>{const Lf=filtra('f');const fs=ALL.filter(f=>(!F.g||grupoDe(f)===F.g)).map(f=>{const l=Lf.filter(e=>e.f===f);return {f,g:grupoDe(f),r:l.filter(e=>e.t==='Rodovia').length,z:l.filter(e=>e.t==='Zona rural').length,n:l.length,p:l.reduce((a,e)=>Math.max(a,e.vmax),0)}}).sort((a,b)=>b.n-a.n);
   const box=sel('c-frota'),W=620,rh=24,lw=120,vw=70,H=fs.length*rh+6,s=svg(box,W,H),T=tip(box),mx=Math.max(1,...fs.map(x=>x.n)),bw=W-lw-vw-40;
@@ -188,9 +188,9 @@ function render(){
  sel('n-oc').textContent=`${NF(0)(L.length)} ocorrências com os filtros atuais.`;
 }
 sel('regras').innerHTML=[
- `<b>Frotas:</b> caminhões ${D.frotas['Caminhões'].join(', ')}; pranchas ${D.frotas['Pranchas'].join(', ')}; vans ${D.frotas['Vans'].join(', ')}. ${D.fora?`As outras ${D.fora} frotas do arquivo ficaram de fora. `:''}${D.sem.length?`Sem nenhum alerta no período: ${D.sem.join(', ')}.`:''}`,
- `<b>Limites:</b> caminhões e pranchas 70 km/h na rodovia e 50 km/h na zona rural; vans 80 km/h na rodovia e 50 km/h na zona rural (regras do rastreador).`,
- `<b>Sem contar duas vezes:</b> o rastreador gera um alerta instantâneo e um alerta "(RELATÓRIO)" para o mesmo excesso. O painel usa o "(RELATÓRIO)", que traz a duração e a velocidade mínima, máxima e média de cada ocorrência. Para as vans, a regra de 80 km/h só tem a versão instantânea e entra como está.`,
+ `<b>Frotas:</b> ${Object.entries(D.frotas).map(([g,L])=>`${g.toLowerCase()} ${L.join(', ')}`).join('; ')}. Caminhões = todas as frotas 605xx do arquivo, menos as pranchas. ${D.fora?`As outras ${D.fora} frotas do arquivo ficaram de fora. `:''}${D.sem.length?`Sem nenhum alerta no período: ${D.sem.join(', ')}.`:''}`,
+ `<b>Limites</b> (regras do rastreador): ${Object.entries(D.limites||{}).map(([g,t])=>`${g.toLowerCase()}: ${t}`).join('; ')}.`,
+ `<b>Sem contar duas vezes:</b> o rastreador gera um alerta instantâneo e um alerta "(RELATÓRIO)" para o mesmo excesso. O painel usa o "(RELATÓRIO)", que traz a duração e a velocidade mínima, máxima e média de cada ocorrência. Para os ônibus 46234 e 46236, a regra de van de 80 km/h só tem a versão instantânea e entra como está.`,
  `<b>Tempo acima do limite:</b> soma da duração das ocorrências.${D.longas.length?' Ocorrências com mais de 1 hora de duração (rastreador sem novas leituras) contam como ocorrência, mas o tempo não é somado: '+D.longas.join('; ')+'.':''}`,
  `<b>Fonte:</b> Relatório de Rastreamento — Alertas e notificações, de ${D.ini} a ${D.fim}.${D.cortado?' '+D.cortado:''}`].map(x=>`<li>${x}</li>`).join('');
 ['f-g','f-f','f-d','f-t'].forEach(id=>sel(id).addEventListener('change',e=>{const k={'f-g':'g','f-f':'f','f-d':'d','f-t':'t'}[id];F[k]=e.target.value;if(k==='g'&&F.f&&grupoDe(F.f)!==F.g)F.f='';opts();render()}));
