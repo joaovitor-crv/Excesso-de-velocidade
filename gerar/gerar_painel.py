@@ -82,7 +82,6 @@ def ler_base(caminho):
 SEM_OP = "Sem Operador"
 FOLGA = 120  # s antes do início e depois do fim da ocorrência
 APROX_MIN = 30  # monit sem leitura no horário: usa a leitura mais próxima até 30 min, se for do mesmo operador
-ULTIMO_H = 12  # sem login: mostra o último login das 12 h anteriores
 
 
 def nome(n):
@@ -123,11 +122,7 @@ def motorista(mon, e):
         if nomes:
             cont = sorted({n: nomes.count(n) for n in nomes}.items(), key=lambda x: -x[1])
             return ["ok", nome(cont[0][0]), ("troca no período: " + " / ".join(nome(n) for n, _ in cont)) if len(cont) > 1 else ""]
-        i = bisect.bisect_left(ts, t)
-        ant = [x for x in L[:i] if x[1] != SEM_OP]
-        if ant and (t - ant[-1][0]).total_seconds() <= ULTIMO_H * 3600:
-            return ["sem", "", f"último login: {nome(ant[-1][1])} ({ant[-1][0]:%d/%m %H:%M})"]
-        return ["sem", "", ""]
+        return ["sem", "", ""]  # sem login: sem "último login" (retirado a pedido do usuário, 05/11/2026)
     i = bisect.bisect_left(ts, t)
     viz = [L[j] for j in (i - 1, i) if 0 <= j < len(L) and abs((L[j][0] - t).total_seconds()) <= APROX_MIN * 60]
     if viz and len({op for _, op in viz}) == 1 and viz[0][1] != SEM_OP:
