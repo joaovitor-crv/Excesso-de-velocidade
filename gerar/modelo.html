@@ -154,7 +154,7 @@ const svg=(box,W,H)=>{box.innerHTML='';const s=document.createElementNS('http://
 const el=(tag,at,p,txt)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e};
 function tip(box){let t=box.querySelector('.tip');if(!t){t=document.createElement('div');t.className='tip';t.hidden=true;box.appendChild(t)}
  return (ev,html)=>{if(!ev){t.hidden=true;return}t.innerHTML=html;t.hidden=false;const r=box.getBoundingClientRect();t.style.left=Math.min(r.width-t.offsetWidth-4,Math.max(4,ev.clientX-r.left+12))+'px';t.style.top=Math.max(4,ev.clientY-r.top-40)+'px'}}
-const MOTS={fora:'Frota fora do monit',semreg:'Sem leitura no monit',sem:'Sem operador logado'};
+const MOTS={fora:'Sem Dados - Solinftec',semreg:'Sem leitura no monit',sem:'Sem operador logado'};
 const motH=e=>{const m=e.mo;if(!m)return '<span class="mo-x">—</span>';if(m[0]==='ok'||m[0]==='aprox')return `<span class="mo"${m[2]?` title="${esc(m[2])}"`:''}>${esc(m[1])}${m[0]==='aprox'?' <small class="mo-a">aprox.</small>':''}${m[2]&&m[0]==='ok'?' <small class="mo-a">troca</small>':''}</span>`;
  return `<span class="mo-x"${m[2]?` title="${esc(m[2])}"`:''}>${MOTS[m[0]]}${m[2]?'<br><small>'+esc(m[2])+'</small>':''}</span>`};
 const soma=L=>L.reduce((a,e)=>a+(e.s||0),0);
@@ -247,7 +247,7 @@ function render(){
     R.map((e,i)=>`<tr><td>${i+1}º</td><td><span class="tag lkf" data-fr="${e.f}" data-top10="1" data-lim="${r.lim}" role="button" tabindex="0" style="--c:${COR[e.g]}">${e.f}</span></td><td>${dm(e.d)}</td><td>${e.h.slice(0,5)}</td><td class="n pk">${e.vmax} km/h</td><td class="n">+${e.vmax-e.lim}</td><td class="mot">${motH(e)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table>'
     :'<p class="note" style="margin:4px 2px">Sem ocorrências de caminhões nessa regra.</p>')+'</div></div>'}).join('');
   const T=Lc.length,ok=Lc.filter(e=>e.mo&&(e.mo[0]==='ok'||e.mo[0]==='aprox')).length,fo=new Set(Lc.filter(e=>e.mo&&e.mo[0]==='fora').map(e=>e.f));
-  sel('n-cam').innerHTML=`Pico de cada caminhão na regra, uma linha por frota. Motorista = operador logado no monit (${D.monitPer||'mesmo período'}) entre o início e o fim da ocorrência. Com os filtros atuais, ${NF(0)(ok)} de ${NF(0)(T)} ocorrências de caminhões têm motorista identificado. <b>aprox.</b> = monit sem leitura no horário, nome da leitura mais próxima (até 30 min). Passe o mouse no nome para ver detalhes.${fo.size?` Frotas que não aparecem no monit: ${[...fo].sort().join(', ')}.`:''}`})();
+  sel('n-cam').innerHTML=`Pico de cada caminhão na regra, uma linha por frota. Motorista = operador logado no monit (${D.monitPer||'mesmo período'}) entre o início e o fim da ocorrência. Com os filtros atuais, ${NF(0)(ok)} de ${NF(0)(T)} ocorrências de caminhões têm motorista identificado. <b>aprox.</b> = monit sem leitura no horário, nome da leitura mais próxima (até 30 min). Passe o mouse no nome para ver detalhes.${fo.size?` Sem Dados - Solinftec (frotas que não aparecem no monit): ${[...fo].sort().join(', ')}.`:''}`})();
  /* ocorrências */
  const o=document.querySelector('.ord [aria-pressed="true"]').dataset.o;
  const ord=[...L].sort(o==='p'?(a,b)=>b.vmax-a.vmax:o==='d'?(a,b)=>(b.s??-1)-(a.s??-1):(a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
@@ -260,7 +260,7 @@ sel('regras').innerHTML=[
  `<b>Sem contar duas vezes:</b> o rastreador gera um alerta instantâneo e um alerta "(RELATÓRIO)" para o mesmo excesso. O painel usa o "(RELATÓRIO)", que traz a duração e a velocidade mínima, máxima e média de cada ocorrência. Para os ônibus 46234 e 46236, a regra de van de 80 km/h só tem a versão instantânea e entra como está.`,
  `<b>Tipo de via:</b> excesso com limite de 50 km/h = estrada de terra; 70 km/h ou mais = rodovia.`,
  `<b>Tempo acima do limite:</b> soma da duração das ocorrências.${D.longas.length?' Ocorrências com mais de 1 hora de duração (rastreador sem novas leituras) contam como ocorrência, mas o tempo não é somado: '+D.longas.join('; ')+'.':''}`,
- ...(D.mot?[`<b>Motorista (caminhões):</b> cruzamento da frota e do horário de cada ocorrência com o monit (${esc(D.monit||'')}) — operador logado entre o início e o fim do excesso (com 2 min de folga). Se o caminhão estava sem login, aparece "Sem operador logado" e, quando houver, o último login das 12 horas anteriores. Frotas que não constam no monit aparecem como "Frota fora do monit".`]:[]),
+ ...(D.mot?[`<b>Motorista (caminhões):</b> cruzamento da frota e do horário de cada ocorrência com o monit (${esc(D.monit||'')}) — operador logado entre o início e o fim do excesso (com 2 min de folga). Se o caminhão estava sem login, aparece "Sem operador logado" e, quando houver, o último login das 12 horas anteriores. Frotas que não constam no monit aparecem como "Sem Dados - Solinftec".`]:[]),
  `<b>Fonte:</b> Relatório de Rastreamento — Alertas e notificações, de ${D.ini} a ${D.fim}.${D.cortado?' '+D.cortado:''}`].map(x=>`<li>${x}</li>`).join('');
 ['f-g','f-f','f-d','f-t','f-u'].forEach(id=>sel(id).addEventListener('change',e=>{const k={'f-g':'g','f-f':'f','f-d':'d','f-t':'t','f-u':'u'}[id];F[k]=e.target.value;if(k==='g'&&F.f&&grupoDe(F.f)!==F.g)F.f='';opts();render()}));
 sel('f-x').addEventListener('click',()=>{F.g=F.f=F.d=F.t=F.u='';opts();render()});
