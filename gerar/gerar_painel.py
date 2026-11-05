@@ -3,6 +3,7 @@
 Uso:
   python3 gerar/gerar_painel.py --base ../excessos-base/dados/alertas.csv --ini 2026-11-01 --fim 2026-11-03
   python3 gerar/gerar_painel.py --xlsx Relatorio_Rastreamento_Alertasenotificacoes.xlsx [--ini ... --fim ...]
+  ... --monit "crv_industrial_EXPORTACAO MONIT221_....csv"   (opcional: motorista dos caminhões)
 
 Entrada: a base histórica (repositório excessos-base, dados/alertas.csv) ou direto o
 "Relatório de Rastreamento — Alertas e notificações" (xlsx) do rastreador.
@@ -11,11 +12,12 @@ Frotas e grupos: FROTAS abaixo. Limites: os da própria regra de cada alerta.
 Desenvolvido por João Vitor - CRV
 """
 import argparse
+import bisect
 import csv
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import openpyxl
 
@@ -77,12 +79,70 @@ def ler_base(caminho):
     return out
 
 
+SEM_OP = "Sem Operador"
+FOLGA = 120  # s antes do início e depois do fim da ocorrência
+APROX_MIN = 30  # monit sem leitura no horário: usa a leitura mais próxima até 30 min, se for do mesmo operador
+ULTIMO_H = 12  # sem login: mostra o último login das 12 h anteriores
+
+
+def nome(n):
+    return " ".join(w.lower() if w in ("DE", "DA", "DO", "DOS", "DAS", "E") else w.capitalize() for w in n.split())
+
+
+def ler_monit(caminho, frotas):
+    """Lê o monit (csv ; ) e devolve {frota: [(datahora, operador), ...]} ordenado, só das frotas pedidas."""
+    out = {}
+    with open(caminho, encoding="utf-8-sig", newline="") as fh:
+        for r in csv.DictReader(fh, delimiter=";"):
+            f = (r.get("Equipamento") or "").strip()
+            if f not in frotas:
+                continue
+            op = (r.get("Operador") or "").strip()
+            if not op or op.lower() == "null":
+                op = SEM_OP
+            out.setdefault(f, []).append((datetime.strptime(r["Data/Hora"], "%d/%m/%Y %H:%M:%S"), op))
+    for L in out.values():
+        L.sort()
+    return out
+
+
+def motorista(mon, e):
+    """Operador logado no monit durante a ocorrência: [situação, nome, detalhe].
+    Situações: ok, aprox (leitura mais próxima), sem (sem login), semreg (sem leitura), fora (frota fora do monit)."""
+    L = mon.get(e[0])
+    if not L:
+        return ["fora", "", ""]
+    t = datetime.strptime(f"{e[2]} {e[3]}", "%Y-%m-%d %H:%M:%S")
+    ts = [x[0] for x in L]
+    s = min(e[4] if e[4] is not None else DUR_MAX, DUR_MAX) or 60
+    a = bisect.bisect_left(ts, t - timedelta(seconds=FOLGA))
+    b = bisect.bisect_right(ts, t + timedelta(seconds=s + FOLGA))
+    jan = [op for _, op in L[a:b]]
+    if jan:
+        nomes = [op for op in jan if op != SEM_OP]
+        if nomes:
+            cont = sorted({n: nomes.count(n) for n in nomes}.items(), key=lambda x: -x[1])
+            return ["ok", nome(cont[0][0]), ("troca no período: " + " / ".join(nome(n) for n, _ in cont)) if len(cont) > 1 else ""]
+        i = bisect.bisect_left(ts, t)
+        ant = [x for x in L[:i] if x[1] != SEM_OP]
+        if ant and (t - ant[-1][0]).total_seconds() <= ULTIMO_H * 3600:
+            return ["sem", "", f"último login: {nome(ant[-1][1])} ({ant[-1][0]:%d/%m %H:%M})"]
+        return ["sem", "", ""]
+    i = bisect.bisect_left(ts, t)
+    viz = [L[j] for j in (i - 1, i) if 0 <= j < len(L) and abs((L[j][0] - t).total_seconds()) <= APROX_MIN * 60]
+    if viz and len({op for _, op in viz}) == 1 and viz[0][1] != SEM_OP:
+        mn = min(abs((x[0] - t).total_seconds()) for x in viz) / 60
+        return ["aprox", nome(viz[0][1]), f"monit sem leitura no horário; leitura mais próxima a {round(mn)} min"]
+    return ["semreg", "", ""]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--xlsx", help="relatório de alertas do rastreador (xlsx)")
     ap.add_argument("--base", help="base histórica: excessos-base/dados/alertas.csv")
     ap.add_argument("--ini", help="primeiro dia (AAAA-MM-DD); padrão: o primeiro do arquivo")
     ap.add_argument("--fim", help="último dia (AAAA-MM-DD); padrão: o último do arquivo")
+    ap.add_argument("--monit", help="opcional: exportação do monit (csv ;) para o motorista dos caminhões")
     ap.add_argument("--saida", default=os.path.join(AQUI, "..", "index.html"))
     a = ap.parse_args()
 
@@ -128,6 +188,16 @@ def main():
     D = dict(ev=ev, frotas=FROTAS, limites=LIMITES, vans=VANS, ini=f"{br(ini)} 00:00", fim=f"{br(fim)} 23:59",
              fora=len({x["frota"] for x in todas} - set(grupo)), sem=[f for f in grupo if f not in com], longas=longas,
              cortado=("O arquivo também trazia " + ", ".join(br(d)[:5] for d in cortados) + ", que ficou de fora.") if cortados else "")
+    if a.monit:
+        mon = ler_monit(a.monit, set(FROTAS["Caminhões"]))
+        D["mot"] = {i: motorista(mon, e) for i, e in enumerate(ev) if e[1] == "Caminhões"}
+        D["monit"] = os.path.basename(a.monit)
+        dts = [x[0] for L in mon.values() for x in (L[0], L[-1])]
+        D["monitPer"] = f"{min(dts):%d/%m} a {max(dts):%d/%m}" if dts else ""
+        sit = {}
+        for m in D["mot"].values():
+            sit[m[0]] = sit.get(m[0], 0) + 1
+        print("Motorista (caminhões): " + " · ".join(f"{k} {v}" for k, v in sorted(sit.items())))
     html = open(os.path.join(AQUI, "modelo.html"), encoding="utf-8").read().replace("__DADOS__", json.dumps(D, ensure_ascii=False))
     open(a.saida, "w", encoding="utf-8").write(html)
     por = {g: sum(1 for e in ev if e[1] == g) for g in FROTAS}

@@ -4,7 +4,7 @@ Painel dos excessos de velocidade dos caminhões, pranchas e ônibus, com filtro
 
 Abra o `index.html` ou acesse pelo GitHub Pages.
 
-**Período atual:** 01/11/2026 a 03/11/2026
+**Período atual:** 01/11/2026 a 04/11/2026
 
 ## Frotas
 - **Caminhões:** todas as frotas 605xx do arquivo, menos as pranchas
@@ -27,6 +27,7 @@ As outras frotas 46 do arquivo ficam de fora. Para mudar, edite `PRANCHAS`, `ONI
    python3 gerar/gerar_painel.py --base ../excessos-base/dados/alertas.csv --ini 2026-11-01 --fim 2026-11-03
    ```
    Também dá para gerar direto do xlsx: `--xlsx <arquivo>` no lugar de `--base`. Sem `--ini`/`--fim`, usa todos os dias.
+   Para mostrar o **motorista dos caminhões**, acrescente `--monit "<exportação do monit>.csv"` (o monit do mesmo período; o arquivo não vai para o repositório).
 3. Faça commit e push do `index.html`.
 
 Precisa de Python 3 com `openpyxl`. Para mudar o visual, edite `gerar/modelo.html` (os dados entram no lugar de `__DADOS__`).

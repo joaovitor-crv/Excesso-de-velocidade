@@ -5,6 +5,7 @@ Ao gerar ou atualizar o painel, use sempre o gerador. Não redesenhe a página �
 ```
 python3 gerar/gerar_painel.py --base ../excessos-base/dados/alertas.csv --ini AAAA-MM-DD --fim AAAA-MM-DD
 python3 gerar/gerar_painel.py --xlsx <Relatorio_Rastreamento_Alertasenotificacoes.xlsx> [--ini AAAA-MM-DD --fim AAAA-MM-DD]
+# opcional, motorista dos caminhões: acrescente --monit "<exportação do monit>.csv"
 ```
 
 - Base histórica (04/11/2026): repositório privado `joaovitor-crv/excessos-base`. Relatório novo → `python3 scripts/importar.py <xlsx>` lá (reenviar um dia substitui o dia), commit e push da base; depois gere o painel com `--base`. Os dois caminhos geram o mesmo painel (ordem fixa: dia, hora, frota, limite).
@@ -22,6 +23,7 @@ python3 gerar/gerar_painel.py --xlsx <Relatorio_Rastreamento_Alertasenotificacoe
 - O `modelo.html` tem `[hidden]{display:none!important}`: sem isso a janela escondida cobre a página no GitHub Pages e bloqueia os cliques.
 - Ocorrência com mais de 1 h de duração conta, mas o tempo não é somado (rastreador sem leituras).
 - Visual dos painéis CRV (logo, azul-marinho); cores dos grupos: caminhões roxo, pranchas laranja, ônibus azul-marinho.
+- Motorista dos caminhões (05/11/2026, pedido do usuário): com `--monit` (exportação do monit, csv `;`, não vai para o repositório), cada ocorrência de caminhão recebe o operador logado no monit entre o início e o fim (2 min de folga). Sem leitura no horário: leitura mais próxima até 30 min, se for do mesmo operador ("aprox."). Sem login: "Sem operador logado" + último login das 12 h anteriores. Frota que não está no monit: "Frota fora do monit". Aparece no quadro "10 maiores velocidades — caminhões, com motorista do monit" (top 10 por regra), na coluna Motorista do "10 maiores velocidades" e na janela dos 10 maiores da frota. Sem `--monit`, o quadro fica escondido.
 - Assinatura no rodapé: "Desenvolvido por João Vitor - CRV".
 
 ## Mudanças
