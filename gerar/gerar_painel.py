@@ -131,6 +131,19 @@ def motorista(mon, e):
     return ["semreg", "", ""]
 
 
+def anterior(caminho):
+    """Motoristas já calculados no painel anterior: {(frota, dia, hora, limite): [situação, nome, detalhe]}."""
+    if not caminho or not os.path.exists(caminho):
+        return {}, "", ""
+    m = re.search(r"const D=(\{.*?\});\n", open(caminho, encoding="utf-8").read(), re.S)
+    if not m:
+        return {}, "", ""
+    D = json.loads(m.group(1))
+    mot = D.get("mot") or {}
+    out = {(e[0], e[2], e[3], e[8]): mot[str(i)] for i, e in enumerate(D["ev"]) if str(i) in mot}
+    return out, D.get("monit", ""), D.get("monitPer", "")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--xlsx", help="relatório de alertas do rastreador (xlsx)")
@@ -139,6 +152,9 @@ def main():
     ap.add_argument("--fim", help="último dia (AAAA-MM-DD); padrão: o último do arquivo")
     ap.add_argument("--monit", help="opcional: exportação do monit (csv ;) para o motorista dos caminhões")
     ap.add_argument("--saida", default=os.path.join(AQUI, "..", "index.html"))
+    ap.add_argument("--anterior", default=None,
+                    help="painel anterior (padrão: o próprio --saida); com --monit, os dias que o monit novo não cobre "
+                         "mantêm o motorista já calculado nele")
     a = ap.parse_args()
 
     if bool(a.xlsx) == bool(a.base):
@@ -185,10 +201,22 @@ def main():
              cortado=("O arquivo também trazia " + ", ".join(br(d)[:5] for d in cortados) + ", que ficou de fora.") if cortados else "")
     if a.monit:
         mon = ler_monit(a.monit, set(FROTAS["Caminhões"]))
-        D["mot"] = {i: motorista(mon, e) for i, e in enumerate(ev) if e[1] == "Caminhões"}
-        D["monit"] = os.path.basename(a.monit)
+        dias_mon = {x[0].strftime("%Y-%m-%d") for L in mon.values() for x in L}
+        ant, ant_nome, ant_per = anterior(a.anterior or a.saida)
+        D["mot"] = {}
+        for i, e in enumerate(ev):
+            if e[1] != "Caminhões":
+                continue
+            k = (e[0], e[2], e[3], e[8])
+            # monit novo só cobre alguns dias: nos outros, mantém o motorista do painel anterior
+            D["mot"][i] = motorista(mon, e) if e[2] in dias_mon or k not in ant else ant[k]
+        usou_ant = any(e[2] not in dias_mon and (e[0], e[2], e[3], e[8]) in ant for e in ev if e[1] == "Caminhões")
+        D["monit"] = " + ".join(x for x in ([ant_nome] if usou_ant and ant_nome else []) + [os.path.basename(a.monit)])
         dts = [x[0] for L in mon.values() for x in (L[0], L[-1])]
-        D["monitPer"] = f"{min(dts):%d/%m} a {max(dts):%d/%m}" if dts else ""
+        ini_m = min(dts).strftime("%d/%m") if dts else ""
+        if usou_ant and ant_per:
+            ini_m = ant_per.split(" a ")[0]
+        D["monitPer"] = f"{ini_m} a {max(dts):%d/%m}" if dts else ""
         sit = {}
         for m in D["mot"].values():
             sit[m[0]] = sit.get(m[0], 0) + 1
