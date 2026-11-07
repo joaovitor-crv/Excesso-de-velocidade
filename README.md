@@ -4,7 +4,7 @@ Painel dos excessos de velocidade dos caminhões, pranchas e ônibus, com filtro
 
 Abra o `index.html` ou acesse pelo GitHub Pages.
 
-**Período atual:** 01/11/2026 a 05/11/2026
+**Período atual:** 01/11/2026 a 06/11/2026
 
 ## Frotas
 - **Caminhões:** todas as frotas 605xx do arquivo, menos as pranchas
