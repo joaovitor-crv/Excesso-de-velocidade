@@ -221,6 +221,16 @@ def main():
         for m in D["mot"].values():
             sit[m[0]] = sit.get(m[0], 0) + 1
         print("Motorista (caminhões): " + " · ".join(f"{k} {v}" for k, v in sorted(sit.items())))
+    else:
+        # sem --monit: mantém os motoristas do painel anterior; dias sem monit ficam "pend" (monit não enviado)
+        ant, ant_nome, ant_per = anterior(a.anterior or a.saida)
+        if ant:
+            D["mot"] = {i: ant.get((e[0], e[2], e[3], e[8]), ["pend", "", ""]) for i, e in enumerate(ev) if e[1] == "Caminhões"}
+            D["monit"], D["monitPer"] = ant_nome, ant_per
+            sit = {}
+            for m in D["mot"].values():
+                sit[m[0]] = sit.get(m[0], 0) + 1
+            print("Motorista (caminhões, do painel anterior): " + " · ".join(f"{k} {v}" for k, v in sorted(sit.items())))
     html = open(os.path.join(AQUI, "modelo.html"), encoding="utf-8").read().replace("__DADOS__", json.dumps(D, ensure_ascii=False))
     open(a.saida, "w", encoding="utf-8").write(html)
     por = {g: sum(1 for e in ev if e[1] == g) for g in FROTAS}

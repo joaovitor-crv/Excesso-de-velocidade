@@ -151,7 +151,7 @@ const svg=(box,W,H)=>{box.innerHTML='';const s=document.createElementNS('http://
 const el=(tag,at,p,txt)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e};
 function tip(box){let t=box.querySelector('.tip');if(!t){t=document.createElement('div');t.className='tip';t.hidden=true;box.appendChild(t)}
  return (ev,html)=>{if(!ev){t.hidden=true;return}t.innerHTML=html;t.hidden=false;const r=box.getBoundingClientRect();t.style.left=Math.min(r.width-t.offsetWidth-4,Math.max(4,ev.clientX-r.left+12))+'px';t.style.top=Math.max(4,ev.clientY-r.top-40)+'px'}}
-const MOTS={fora:'Sem Dados - Solinftec',semreg:'Sem leitura no monit',sem:'Sem operador logado'};
+const MOTS={fora:'Sem Dados - Solinftec',semreg:'Sem leitura no monit',sem:'Sem operador logado',pend:'Monit do dia não enviado'};
 const motH=e=>{const m=e.mo;if(!m)return '<span class="mo-x">—</span>';if(m[0]==='ok'||m[0]==='aprox')return `<span class="mo"${m[2]?` title="${esc(m[2])}"`:''}>${esc(m[1])}${m[0]==='aprox'?' <small class="mo-a">aprox.</small>':''}${m[2]&&m[0]==='ok'?' <small class="mo-a">troca</small>':''}</span>`;
  return `<span class="mo-x"${m[2]?` title="${esc(m[2])}"`:''}>${MOTS[m[0]]}${m[2]?'<br><small>'+esc(m[2])+'</small>':''}</span>`};
 const soma=L=>L.reduce((a,e)=>a+(e.s||0),0);
