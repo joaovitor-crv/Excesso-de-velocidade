@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Evolução dos Excessos CRV</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+/* Layout: visual dos painéis CRV — topo com logo, filtros e indicadores; evolução diária; grupos e mesmo dia da semana; frotas e motoristas */
+:root{--bg:#eef0f4;--card:#fff;--line:#d9dde6;--ink:#1d2433;--muted:#5b6475;--navy:#22378c;--navy-2:#2a44a8;--terra:#c99a2e;--rod:#22378c;
+ --good:#2e7d32;--good-bg:#e5f2e6;--bad:#d64550;--bad-bg:#fbe7e9;--zebra:#f6f7fa;--font:"Segoe UI","Segoe UI Web",Tahoma,Arial,sans-serif;color-scheme:light}
+body{background:var(--bg);color:var(--ink);font-family:var(--font)}
+.pg{padding-block:12px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.top{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:stretch}
+.logo{background:var(--card);border-radius:8px;display:flex;align-items:center;justify-content:center;padding:6px 10px}.logo img{display:block;height:48px;width:auto}
+.hdr{display:flex;flex-direction:column;gap:6px;min-width:0}
+.hdr-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{margin:0;color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.periodo{background:#111;color:#fff;font-weight:700;font-style:italic;font-size:12px;padding:3px 14px;border-radius:4px}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filtros label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--navy)}
+.filtros select{font:600 12px var(--font);color:var(--ink);border:1px solid var(--navy);border-radius:4px;padding:3px 6px;background:#fff}
+.filtros a{font:700 12px var(--font);border-radius:4px;padding:4px 10px;border:1px solid var(--navy);background:var(--navy);color:#fff;text-decoration:none;margin-left:auto}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.kpi{background:var(--card);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.kpi .l{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.kpi .v{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-variant-numeric:tabular-nums}.kpi .v s{color:var(--muted);text-decoration:none;font-size:13px}.kpi .v b{color:var(--navy);font-size:21px}
+.kpi .s{font-size:11px;color:var(--muted)}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill.good{color:var(--good);background:var(--good-bg)}.pill.bad{color:var(--bad);background:var(--bad-bg)}.pill.neu{color:var(--muted);background:var(--zebra)}
+.lead{background:var(--card);border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.5;border-left:4px solid var(--navy)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.card{background:var(--card);border-radius:10px;overflow:hidden;min-width:0}
+.card>h2{margin:0;background:var(--navy);color:#fff;text-align:center;font-size:12px;font-weight:600;padding:4px 8px;text-transform:uppercase}
+.cb{padding:10px 12px 12px}
+.note{font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.45}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:6px}.leg i{display:inline-block;width:12px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+svg{display:block;width:100%;height:auto}svg text{font-family:var(--font)}
+.chart{position:relative}
+.tip{position:absolute;pointer-events:none;background:#1d2433;color:#fff;font-size:11.5px;line-height:1.4;padding:6px 8px;border-radius:6px;max-width:260px;z-index:5}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th{font-weight:700;text-align:right;padding:6px;border-bottom:1px solid #8a93a6;white-space:nowrap;font-size:11.5px}
+td{text-align:right;padding:6px;border-bottom:1px solid var(--zebra);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tbody tr:nth-child(even) td{background:var(--zebra)}
+tr.t td{font-weight:700;border-top:1px solid #8a93a6;background:var(--card)!important}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:8px;color:#fff;background:var(--c)}
+.mu{color:var(--muted)}
+.ass{text-align:center;font-size:12px;opacity:.6;padding:12px 0 0}
+@media (max-width:1050px){.grid{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.top{grid-template-columns:1fr}.kpis{grid-template-columns:minmax(0,1fr)}.filtros a{margin-left:0}}
+</style></head><body>
+<div class="pg">
+ <div class="top">
+  <div class="logo"><img src="logo-crv.png" alt="CRV Industrial — Açúcar, Etanol e Energia"></div>
+  <div class="hdr">
+   <div class="hdr-row"><h1>Evolução dos excessos de velocidade</h1><span class="periodo" id="per"></span></div>
+   <div class="filtros">
+    <label>Grupo <select id="f-g"><option value="">Todos</option><option>Caminhões</option><option>Pranchas</option><option>Ônibus</option></select></label>
+    <label>Via <select id="f-t"><option value="">Todas</option><option>Rodovia</option><option>Estrada de terra</option></select></label>
+    <a href="index.html">Painel do dia a dia →</a>
+   </div>
+  </div>
+ </div>
+ <div class="kpis" id="kpis"></div>
+ <div class="lead" id="lead"></div>
+ <section class="card"><h2>Excessos por dia</h2><div class="cb"><div class="leg"><span><i style="background:var(--rod)"></i>Rodovia (70 km/h ou mais)</span><span><i style="background:var(--terra)"></i>Estrada de terra (50 km/h)</span><span><i style="background:none;border-top:2px dashed var(--muted);height:0;width:16px;vertical-align:3px"></i>Média por dia da semana</span></div><div class="chart" id="c-dia"></div><p class="note">Ocorrências de excesso (regras "(RELATÓRIO)" e van 80 km/h), pela data de início. Semanas de domingo a sábado.</p></div></section>
+ <div class="grid">
+  <section class="card"><h2>Por grupo, por dia</h2><div class="cb"><div class="leg" id="leg-g"></div><div class="chart" id="c-grp"></div></div></section>
+  <section class="card"><h2>Mesmo dia da semana, semana a semana</h2><div class="cb"><div class="tw"><table id="t-sem"></table></div><p class="note">Variação: última semana contra a anterior, no mesmo dia da semana. Verde caiu, vermelho subiu.</p></div></section>
+ </div>
+ <div class="grid">
+  <section class="card"><h2>Frotas: média por dia, semana a semana</h2><div class="cb"><div class="tw"><table id="t-fr"></table></div><p class="note" id="n-fr"></p></div></section>
+  <section class="card"><h2>Motoristas dos caminhões com mais excessos</h2><div class="cb"><div class="tw"><table id="t-mot"></table></div><p class="note">Motorista logado no monit na hora do excesso (caminhões). Excessos sem motorista identificado ficam de fora.</p></div></section>
+ </div>
+ <div class="ass">Desenvolvido por João Vitor - CRV</div>
+</div>
+<script>
+const D=__DADOS__;
+const NF=d=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}).format;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COR={'Caminhões':'#6f4fb0','Pranchas':'#e8963a','Ônibus':'#22378c'};
+const VANS=D.vans||[];const vanH=f=>VANS.includes(f)?' <span class="tag" style="--c:#1f7a6e">VAN</span>':'';
+const $=id=>document.getElementById(id);
+const dm=d=>d.slice(8,10)+'/'+d.slice(5,7);
+const WD=['dom','seg','ter','qua','qui','sex','sáb'],WDL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const dt=d=>new Date(d+'T12:00:00');const wd=d=>dt(d).getDay();
+const E=D.ev.map((e,i)=>{const m=(D.mot||{})[i];return {f:e[0],g:e[1],d:e[2],h:e[3],vmax:e[6],lim:e[8],t:e[9],mot:m&&(m[0]==='ok'||m[0]==='aprox')?m[1]:''}});
+/* dias e semanas (domingo a sábado) */
+const DIAS=[];for(let x=dt(E.length?E.reduce((a,e)=>e.d<a?e.d:a,E[0].d):'2026-11-01'),fim=dt(E.reduce((a,e)=>e.d>a?e.d:a,''));x<=fim;x.setDate(x.getDate()+1))DIAS.push(x.toISOString().slice(0,10));
+const sem0=dt(DIAS[0]);sem0.setDate(sem0.getDate()-sem0.getDay());
+const semDe=d=>Math.floor((dt(d)-sem0)/864e5/7);
+const NS=semDe(DIAS.at(-1))+1;
+const SEMS=[...Array(NS).keys()].map(k=>{const ds=DIAS.filter(d=>semDe(d)===k);return {k,ds,lab:`Semana ${k+1}`,per:`${dm(ds[0])} a ${dm(ds.at(-1))}`,parcial:ds.length<7}});
+$('per').textContent=`${dm(DIAS[0])} a ${dm(DIAS.at(-1))}/${DIAS.at(-1).slice(0,4)}`;
+const F={g:'',t:''};
+const filtra=()=>E.filter(e=>(!F.g||e.g===F.g)&&(!F.t||e.t===F.t));
+const tipEl=box=>{let t=box.querySelector('.tip');if(!t){t=document.createElement('div');t.className='tip';t.hidden=true;box.appendChild(t)}
+ return (ev,h)=>{if(!ev){t.hidden=true;return}t.innerHTML=h;t.hidden=false;const r=box.getBoundingClientRect();let x=ev.clientX-r.left+12,y=ev.clientY-r.top+12;if(x+t.offsetWidth>r.width)x=Math.max(0,ev.clientX-r.left-t.offsetWidth-12);t.style.left=x+'px';t.style.top=y+'px'}};
+const pct=(a,b)=>a?((b-a)/a*100):null;
+const pill=(v,inv)=>v==null?'<span class="pill neu">—</span>':`<span class="pill ${Math.abs(v)<0.5?'neu':(v<0)!==!!inv?'good':'bad'}">${v>0?'+':v<0?'−':''}${NF(0)(Math.abs(v))}%</span>`;
+function render(){
+ const L=filtra();const por=d=>L.filter(e=>e.d===d);
+ const est=(ds,extra)=>{const l=L.filter(e=>ds.includes(e.d));return {...extra,ds,n:l.length,md:l.length/ds.length,terra:l.filter(e=>e.t==='Estrada de terra').length,ac:l.length?l.reduce((a,e)=>a+e.vmax-e.lim,0)/l.length:0,fr:ds.reduce((a,d)=>a+new Set(l.filter(e=>e.d===d).map(e=>e.f)).size,0)/ds.length}};
+ const S=SEMS.map(s=>est(s.ds,s));const cmp=S.length>1;const b=S.at(-1);
+ /* comparação justa: a semana anterior só nos mesmos dias da semana que a última tem */
+ const wb=b.ds.map(wd);const a=cmp?est(S.at(-2).ds.filter(d=>wb.includes(wd(d))),S.at(-2)):b;
+ const dLab=b.ds.length<7?` (${[...new Set(wb)].map(w=>WD[w]).join(', ')})`:'';
+ const ppill=(d)=>`<span class="pill ${Math.abs(d)<0.5?'neu':d<0?'good':'bad'}">${d>0?'+':d<0?'−':''}${NF(0)(Math.abs(d))} p.p.</span>`;
+ const ka=(lbl,va,vb,fmt,inv,sub,pp)=>`<div class="kpi"><span class="l">${lbl}</span><span class="v">${cmp?`<s>${fmt(va)} →</s>`:''}<b>${fmt(vb)}</b></span><span>${cmp?(pp?ppill(vb-va):pill(pct(va,vb),inv)):''} <span class="s">${sub}</span></span></div>`;
+ $('kpis').innerHTML=[
+  ka('Média de excessos por dia',a.md,b.md,NF(0),false,cmp?`${a.lab} → ${b.lab}, mesmos dias${dLab}`:''),
+  ka('Em estrada de terra',a.terra/Math.max(1,a.n)*100,b.terra/Math.max(1,b.n)*100,v=>NF(0)(v)+'%',false,'parte dos excessos',1),
+  ka('Pico médio acima do limite',a.ac,b.ac,v=>'+'+NF(1)(v)+' km/h',false,'por ocorrência'),
+  ka('Frotas com excesso por dia',a.fr,b.fr,NF(1),false,'média')].join('');
+ /* lead */
+ const tot=DIAS.map(d=>por(d).length),mx=Math.max(...tot),dmx=DIAS[tot.indexOf(mx)],mn=Math.min(...tot),dmn=DIAS[tot.indexOf(mn)];
+ const vp=pct(a.md,b.md);
+ $('lead').innerHTML=cmp?`<b>${b.lab} (${b.per}${b.parcial?', em andamento':''}): ${NF(0)(b.md)} excessos por dia, ${vp>0?'+':vp<0?'−':''}${NF(0)(Math.abs(vp))}% contra os mesmos dias da ${a.lab.toLowerCase()}${dLab} (${NF(0)(a.md)} por dia).</b> Estrada de terra passou de ${NF(0)(a.terra/Math.max(1,a.n)*100)}% para ${NF(0)(b.terra/Math.max(1,b.n)*100)}% dos excessos. Dia com mais excessos: ${WD[wd(dmx)]} ${dm(dmx)} (${NF(0)(mx)}); com menos: ${WD[wd(dmn)]} ${dm(dmn)} (${NF(0)(mn)}). Os cartões comparam só os mesmos dias da semana, porque domingo costuma ter menos excessos.`
+  :`${NF(0)(L.length)} excessos em ${DIAS.length} dias.`;
+ /* gráfico por dia */
+ (()=>{const box=$('c-dia'),T=tipEl(box);const W=1300,H=300,l=40,base=244,y0=30;const rows=DIAS.map(d=>{const l2=por(d);return {d,r:l2.filter(e=>e.t==='Rodovia').length,z:l2.filter(e=>e.t==='Estrada de terra').length}});
+  const M=Math.max(1,...rows.map(r=>r.r+r.z));const band=(W-l-6)/rows.length,bw=Math.min(54,band*.62);const y=v=>base-v/M*(base-y0);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Excessos por dia">`;
+  [0,.5,1].forEach(f=>{const v=Math.round(M*f);s+=`<line x1="${l}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="#eef0f4"/><text x="${l-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${NF(0)(v)}</text>`});
+  rows.forEach((r,i)=>{const x=l+i*band+(band-bw)/2,cx=x+bw/2,t=r.r+r.z,dom=wd(r.d)===0;
+   if(r.r)s+=`<rect x="${x}" y="${y(r.r)}" width="${bw}" height="${base-y(r.r)}" fill="var(--rod)"/>`;
+   if(r.z)s+=`<rect x="${x}" y="${y(t)}" width="${bw}" height="${y(r.r)-y(t)}" fill="var(--terra)"/>`;
+   s+=`<text x="${cx}" y="${y(t)-5}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">${NF(0)(t)}</text>`;
+   s+=`<text x="${cx}" y="${base+15}" text-anchor="middle" font-size="11" fill="var(--ink)">${dm(r.d)}</text><text x="${cx}" y="${base+28}" text-anchor="middle" font-size="10" fill="${dom?'var(--bad)':'var(--muted)'}" font-weight="${dom?700:400}">${WD[wd(r.d)]}</text>`;
+   s+=`<rect class="hit" data-i="${i}" x="${l+i*band}" y="${y0-10}" width="${band}" height="${base-y0+40}" fill="transparent"/>`});
+  SEMS.forEach(sm=>{const i0=DIAS.indexOf(sm.ds[0]),i1=DIAS.indexOf(sm.ds.at(-1)),x1=l+i0*band,x2=l+(i1+1)*band,md=S[sm.k].md;
+   if(i0)s+=`<line x1="${x1}" x2="${x1}" y1="${y0-14}" y2="${base+30}" stroke="#8a93a6" stroke-dasharray="2 3"/>`;
+   s+=`<line x1="${x1+4}" x2="${x2-4}" y1="${y(md)}" y2="${y(md)}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+   s+=`<text x="${(x1+x2)/2}" y="${H-6}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--navy)">${sm.lab} · ${sm.per}${sm.parcial?' (em andamento)':''} · média ${NF(0)(md)}/dia</text>`});
+  box.innerHTML=s+'</svg>';
+  box.querySelectorAll('.hit').forEach(h=>{const r=rows[+h.dataset.i];h.addEventListener('mousemove',ev=>T(ev,`<b>${WDL[wd(r.d)]}, ${dm(r.d)}</b><br>${NF(0)(r.r+r.z)} excessos<br>Rodovia ${NF(0)(r.r)} · Estrada de terra ${NF(0)(r.z)}`));h.addEventListener('mouseleave',()=>T())})})();
+ /* por grupo, linhas */
+ (()=>{const box=$('c-grp'),T=tipEl(box);const G=Object.keys(COR).filter(g=>!F.g||g===F.g);const W=640,H=240,l=36,base=200,y0=14;
+  const v=G.map(g=>DIAS.map(d=>L.filter(e=>e.d===d&&e.g===g).length));const M=Math.max(1,...v.flat());const band=(W-l-10)/DIAS.length,x=i=>l+band*i+band/2,y=n=>base-n/M*(base-y0);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Excessos por grupo por dia">`;
+  [0,.5,1].forEach(f=>{const n=Math.round(M*f);s+=`<line x1="${l}" x2="${W-6}" y1="${y(n)}" y2="${y(n)}" stroke="#eef0f4"/><text x="${l-6}" y="${y(n)+4}" text-anchor="end" font-size="10.5" fill="var(--muted)">${n}</text>`});
+  DIAS.forEach((d,i)=>{s+=`<text x="${x(i)}" y="${base+15}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${dm(d)}</text><text x="${x(i)}" y="${base+27}" text-anchor="middle" font-size="9.5" fill="${wd(d)===0?'var(--bad)':'var(--muted)'}">${WD[wd(d)]}</text>`});
+  G.forEach((g,k)=>{s+=`<polyline fill="none" stroke="${COR[g]}" stroke-width="2.5" points="${v[k].map((n,i)=>x(i)+','+y(n)).join(' ')}"/>`;v[k].forEach((n,i)=>{s+=`<circle cx="${x(i)}" cy="${y(n)}" r="3.5" fill="${COR[g]}"/>`});
+   const n=v[k].at(-1);s+=`<text x="${x(DIAS.length-1)+6}" y="${y(n)+4}" font-size="11" font-weight="700" fill="${COR[g]}">${n}</text>`});
+  DIAS.forEach((d,i)=>{s+=`<rect class="hit" data-i="${i}" x="${l+band*i}" y="0" width="${band}" height="${base}" fill="transparent"/>`});
+  box.innerHTML=s+'</svg>';$('leg-g').innerHTML=G.map(g=>`<span><i style="background:${COR[g]}"></i>${g}</span>`).join('');
+  box.querySelectorAll('.hit').forEach(h=>{const i=+h.dataset.i;h.addEventListener('mousemove',ev=>T(ev,`<b>${WD[wd(DIAS[i])]} ${dm(DIAS[i])}</b><br>${G.map((g,k)=>`${g}: ${v[k][i]}`).join('<br>')}`));h.addEventListener('mouseleave',()=>T())})})();
+ /* mesmo dia da semana */
+ (()=>{const cnt=d=>d?por(d).length:null;
+  let h=`<thead><tr><th>Dia</th>${SEMS.map(s=>`<th>${s.lab}</th>`).join('')}${cmp?'<th>Variação</th>':''}</tr></thead><tbody>`;
+  for(let w=0;w<7;w++){const vals=SEMS.map(s=>{const d=s.ds.find(x=>wd(x)===w);return {d,n:cnt(d)}});const va=vals.at(-2),vb=vals.at(-1);
+   h+=`<tr><td><b>${WDL[w]}</b></td>${vals.map((x,k)=>x.d?`<td>${k===vals.length-1?'<b>':''}${NF(0)(x.n)}${k===vals.length-1?'</b>':''} <span class="mu">(${dm(x.d)})</span></td>`:'<td class="mu">—</td>').join('')}${cmp?`<td>${va&&vb&&va.d&&vb.d?pill(pct(va.n,vb.n)):'<span class="mu">—</span>'}</td>`:''}</tr>`}
+  h+=`<tr class="t"><td>Média por dia</td>${S.map(s=>`<td>${NF(0)(s.md)}</td>`).join('')}${cmp?`<td>${pill(pct(a.md,b.md))}</td>`:''}</tr></tbody>`;$('t-sem').innerHTML=h})();
+ /* frotas */
+ (()=>{const fs=[...new Set(L.map(e=>e.f))];const rows=fs.map(f=>{const l=L.filter(e=>e.f===f);return {f,g:l[0].g,m:S.map(s=>l.filter(e=>semDe(e.d)===s.k).length/s.ds.length),t:l.length}});
+  rows.forEach(r=>{r.dv=cmp?r.m.at(-1)-r.m.at(-2):0});
+  const top=[...rows].sort((p,q)=>q.t-p.t).slice(0,12);
+  $('t-fr').innerHTML=`<thead><tr><th>Frota</th>${SEMS.map(s=>`<th>${s.lab}</th>`).join('')}${cmp?'<th>Variação</th>':''}<th>Total</th></tr></thead><tbody>`+
+   top.map(r=>`<tr><td><span class="tag" style="--c:${COR[r.g]}">${r.f}</span>${vanH(r.f)}</td>${r.m.map((v,k)=>`<td>${k===r.m.length-1?'<b>':''}${NF(1)(v)}${k===r.m.length-1?'</b>':''}</td>`).join('')}${cmp?`<td>${pill(pct(r.m.at(-2),r.m.at(-1)))}</td>`:''}<td>${NF(0)(r.t)}</td></tr>`).join('')+'</tbody>';
+  const sub=[...rows].filter(r=>cmp).sort((p,q)=>q.dv-p.dv);
+  $('n-fr').innerHTML=`As 12 frotas com mais excessos no período, em excessos por dia em cada semana.`+(cmp&&sub.length?` Mais subiu: <b>${sub[0].f}</b> (${NF(1)(sub[0].m.at(-2))} → ${NF(1)(sub[0].m.at(-1))} por dia). Mais caiu: <b>${sub.at(-1).f}</b> (${NF(1)(sub.at(-1).m.at(-2))} → ${NF(1)(sub.at(-1).m.at(-1))} por dia).`:'')})();
+ /* motoristas */
+ (()=>{const l=L.filter(e=>e.g==='Caminhões'&&e.mot);const ms=[...new Set(l.map(e=>e.mot))];
+  const rows=ms.map(m=>{const x=l.filter(e=>e.mot===m);return {m,n:x.length,s:S.map(s=>x.filter(e=>semDe(e.d)===s.k).length),z:x.filter(e=>e.t==='Estrada de terra').length,p:Math.max(...x.map(e=>e.vmax)),fr:[...new Set(x.map(e=>e.f))]}}).sort((p,q)=>q.n-p.n).slice(0,12);
+  $('t-mot').innerHTML=rows.length?`<thead><tr><th>Motorista</th><th>Caminhão</th>${SEMS.map(s=>`<th>${s.lab}</th>`).join('')}<th>Estrada de terra</th><th>Pico</th></tr></thead><tbody>`+
+   rows.map(r=>`<tr><td>${esc(r.m)}</td><td class="mu">${r.fr.slice(0,2).join(', ')}${r.fr.length>2?' +'+(r.fr.length-2):''}</td>${r.s.map((v,k)=>`<td>${k===r.s.length-1?'<b>':''}${v}${k===r.s.length-1?'</b>':''}</td>`).join('')}<td>${r.z}</td><td style="color:var(--bad);font-weight:700">${r.p} km/h</td></tr>`).join('')+'</tbody>'
+   :'<tbody><tr><td class="mu">Sem motoristas identificados com esse filtro.</td></tr></tbody>'})();
+}
+['f-g','f-t'].forEach(id=>$(id).addEventListener('change',e=>{F[id==='f-g'?'g':'t']=e.target.value;render()}));
+render();
+</script>
+</body></html>

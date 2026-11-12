@@ -233,6 +233,9 @@ def main():
             print("Motorista (caminhões, do painel anterior): " + " · ".join(f"{k} {v}" for k, v in sorted(sit.items())))
     html = open(os.path.join(AQUI, "modelo.html"), encoding="utf-8").read().replace("__DADOS__", json.dumps(D, ensure_ascii=False))
     open(a.saida, "w", encoding="utf-8").write(html)
+    # página de evolução (mesmos dados), ao lado do index.html
+    evo = open(os.path.join(AQUI, "evolucao.html"), encoding="utf-8").read().replace("__DADOS__", json.dumps(D, ensure_ascii=False))
+    open(os.path.join(os.path.dirname(os.path.abspath(a.saida)), "evolucao.html"), "w", encoding="utf-8").write(evo)
     por = {g: sum(1 for e in ev if e[1] == g) for g in FROTAS}
     print(f"Painel gerado: {br(ini)} a {br(fim)} · {len(ev)} ocorrências · " + " · ".join(f"{g} {n}" for g, n in por.items())
           + (f" · sem alerta: {', '.join(D['sem'])}" if D["sem"] else ""))

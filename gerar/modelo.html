@@ -23,6 +23,7 @@ h1{margin:0;color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.02e
 .filtros label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--navy)}
 .filtros select{font:600 12px var(--font);color:var(--ink);border:1px solid var(--navy);border-radius:4px;padding:3px 6px;background:#fff}
 .filtros button{font:700 12px var(--font);border-radius:4px;padding:4px 10px;border:1px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+.filtros a.evo{font:700 12px var(--font);border-radius:4px;padding:4px 10px;border:1px solid var(--navy);background:var(--navy);color:#fff;text-decoration:none;margin-left:auto}
 .filtros button:focus-visible,.filtros select:focus-visible{outline:2px solid var(--navy-2);outline-offset:2px}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .kpi{background:var(--card);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -101,6 +102,7 @@ td.mot{white-space:normal;min-width:150px;font-weight:600}.mo-x{color:var(--mute
     <label>Turno <select id="f-u"><option value="">Todos</option><option value="A">A · 07–15h</option><option value="B">B · 15–23h</option><option value="C">C · 23–07h</option></select></label>
     <label>Via <select id="f-t"><option value="">Todas</option><option>Rodovia</option><option>Estrada de terra</option></select></label>
     <button type="button" id="f-x">Limpar filtros</button>
+    <a class="evo" href="evolucao.html">Evolução dos excessos →</a>
    </div>
    <div class="kpis" id="kpis"></div>
   </div>
