@@ -84,6 +84,11 @@ td.loc{white-space:normal;min-width:200px;color:var(--muted)}
 .dlg-b .acao{align-self:flex-start;font:700 12px var(--font);border-radius:4px;padding:5px 12px;border:1px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
 a.lkf{color:var(--navy-2);text-decoration:underline;cursor:pointer;font-weight:700}
 .tag.lkf{cursor:pointer;text-decoration:underline}
+.mrk{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+.mrk h3{margin:0 0 6px;font-size:12px;color:var(--navy);text-transform:uppercase}
+a.lkm{color:var(--navy-2);text-decoration:underline;cursor:pointer;font-weight:700}
+.pos{display:inline-block;min-width:22px;text-align:center;font-weight:800;border-radius:10px;padding:0 5px;background:#eef1f8;color:#1d2433}.pos.p1{background:#d64550;color:#fff}.pos.p2{background:#e8963a;color:#fff}.pos.p3{background:#d9b51f;color:#fff}
+@media (max-width:1050px){.mrk{grid-template-columns:minmax(0,1fr)}}
 td.mot{white-space:normal;min-width:150px;font-weight:600}.mo-x{color:var(--muted);font-weight:400;font-size:11px}.mo-x small{font-size:10.5px}.mo-a{font-size:9.5px;font-weight:700;color:#8a6d1f;background:#fbf1d9;border-radius:6px;padding:0 4px}
 .ass{text-align:center;font-size:12px;opacity:.6;padding:12px 0 0}
 @media (max-width:1050px){.grid,.grid3{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -113,6 +118,7 @@ td.mot{white-space:normal;min-width:150px;font-weight:600}.mo-x{color:var(--mute
  <section class="card"><h2>Excessos por turno</h2><div class="cb"><div class="turnos" id="turnos"></div><p class="note">Turno pela hora de início da ocorrência: A 07–15h, B 15–23h, C 23–07h. Clique num turno para filtrar o painel.</p></div></section>
  <section class="card"><h2>Excessos por frota</h2><div class="cb"><div class="leg" id="leg-f"></div><div class="grid3" id="rg-frota"></div><p class="note">Cada cartão é uma regra do rastreador. Barra na cor do grupo; à direita, o pico de velocidade da frota naquela regra. <b>Clique numa frota para ver os 5 maiores excessos dela em cada tipo de via.</b></p></div></section>
  <section class="card"><h2>10 maiores velocidades</h2><div class="cb"><div class="grid3" id="rg-top"></div><p class="note">O maior pico de cada frota na regra, uma linha por frota. <b>Clique na frota para ver os 10 maiores excessos dela naquela regra.</b></p></div></section>
+ <section class="card" id="sec-mot"><h2>Classificação dos motoristas — 10 com mais excessos</h2><div class="cb"><div class="mrk"><div><h3>Classificação</h3><div class="tw"><table><thead><tr><th>#</th><th>Motorista</th><th class="n">Excessos</th><th class="n">Rodovia</th><th class="n">Estr. de terra</th><th class="n">Pico</th><th class="n">Média acima do limite</th><th>Frotas</th></tr></thead><tbody id="t-mot"></tbody></table></div></div><div><h3>Top velocidade desses 10 motoristas</h3><div class="chart" id="c-mot"></div></div></div><p class="note">Caminhões, com o motorista logado no monit na hora do excesso (inclui os "aprox."). Ordem: mais excessos; empate, maior pico. Respeita os filtros do painel. <b>Clique no motorista para ver os 10 maiores excessos dele.</b></p></div></section>
  <div class="grid">
   <section class="card"><h2>Excessos por dia e por hora</h2><div class="cb"><div class="leg" id="leg-d"></div><div class="chart" id="c-dia"></div><div class="chart" id="c-hora" style="margin-top:10px"></div><p class="note">Hora de início da ocorrência. Clique num dia para ver só ele; para um período, use os filtros De e Até no topo.</p></div></section>
   <section class="card"><h2>Onde acontecem</h2><div class="cb"><div class="chart" id="c-area"></div><p class="note">Área ou rota cadastrada no rastreador para a ocorrência, com o pico de velocidade em cada uma. <b>Clique numa área para ver os 20 maiores excessos dela.</b></p></div></section>
@@ -249,6 +255,22 @@ function render(){
   (R.length?`<table><thead><tr><th>#</th><th>Frota</th><th>Dia</th><th>Hora</th><th class="n">Pico</th><th>Motorista</th><th>Local</th></tr></thead><tbody>`+
    R.map((e,i)=>`<tr><td>${i+1}º</td><td><span class="tag lkf" data-fr="${e.f}" data-top10="1" data-lim="${r.lim}" role="button" tabindex="0" style="--c:${COR[e.g]}">${e.f}</span>${vanH(e.f)}</td><td>${dm(e.d)}</td><td>${e.h.slice(0,5)}</td><td class="n pk">${e.vmax} km/h</td><td class="mot">${e.g==='Caminhões'?motH(e):'<span class="mo-x">—</span>'}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table>'
    :'<p class="note" style="margin:4px 2px">Sem ocorrências nessa regra.</p>')+'</div></div>'}).join('');
+ /* classificação dos motoristas (caminhões com motorista do monit) */
+ (()=>{const sec=sel('sec-mot');if(!D.mot){sec.hidden=true;return}sec.hidden=false;
+  const by={};L.filter(e=>e.mo&&(e.mo[0]==='ok'||e.mo[0]==='aprox')&&e.mo[1]).forEach(e=>{(by[e.mo[1]]=by[e.mo[1]]||[]).push(e)});
+  MOTR=Object.entries(by).map(([m,l])=>{const pk=l.reduce((a,e)=>!a||e.vmax>a.vmax?e:a,null);return {m,l,n:l.length,rod:l.filter(e=>e.t==='Rodovia').length,ter:l.filter(e=>e.t!=='Rodovia').length,pk,acm:l.reduce((a,e)=>a+(e.vmax-e.lim),0)/l.length,fr:[...new Set(l.map(e=>e.f))].sort()}})
+   .sort((a,b)=>b.n-a.n||b.pk.vmax-a.pk.vmax||a.m.localeCompare(b.m)).slice(0,10);
+  sel('t-mot').innerHTML=MOTR.map((r,i)=>`<tr><td><span class="pos ${i<3?'p'+(i+1):''}">${i+1}º</span></td><td><a class="lkm" href="#" data-mot="${i}">${esc(r.m)}</a></td><td class="n"><b>${NF(0)(r.n)}</b></td><td class="n">${NF(0)(r.rod)}</td><td class="n">${NF(0)(r.ter)}</td><td class="n pk">${r.pk.vmax} km/h</td><td class="n">+${NF(1)(r.acm)} km/h</td><td style="white-space:normal;min-width:90px">${r.fr.join(', ')}</td></tr>`).join('')||'<tr><td colspan="8">Nenhum excesso com motorista identificado nos filtros atuais.</td></tr>';
+  const box=sel('c-mot');if(!MOTR.length){box.innerHTML='';return}
+  const V=[...MOTR.map((r,i)=>({...r,i}))].sort((a,b)=>b.pk.vmax-a.pk.vmax||b.n-a.n);const W=440,rh=27,lw=170,H=V.length*rh+6,s=svg(box,W,H),T=tip(box);
+  const mn=Math.min(...V.map(r=>r.pk.vmax))-15,mx=Math.max(...V.map(r=>r.pk.vmax));
+  V.forEach((r,k)=>{const y=k*rh+3,w=Math.max(4,(W-lw-62)*(r.pk.vmax-mn)/Math.max(1,mx-mn));const nm=r.m.length>24?r.m.slice(0,23)+'…':r.m;
+   el('text',{x:lw-8,y:y+16,'text-anchor':'end','font-size':11.5,fill:'#1d2433'},s,nm);
+   const b=el('rect',{x:lw,y:y+4,width:w,height:17,rx:2,fill:r.pk.lim<=50?'#c99a2e':'#22378c'},s);
+   el('text',{x:lw+w+6,y:y+17,'font-size':12,'font-weight':800,fill:'#d64550'},s,r.pk.vmax+' km/h');
+   const hit=el('rect',{x:0,y,width:W,height:rh,fill:'transparent',style:'cursor:pointer'},s);
+   [b,hit].forEach(z=>{z.addEventListener('mousemove',ev=>T(ev,`<b>${esc(r.m)}</b><br>pico ${r.pk.vmax} km/h (limite ${r.pk.lim}) · frota ${r.pk.f} · ${dm(r.pk.d)} ${r.pk.h.slice(0,5)}<br>${r.n} excessos · ${r.i+1}º na classificação · clique para ver os 10 maiores`));z.addEventListener('mouseleave',()=>T());z.addEventListener('click',()=>{T();motTop(r.i)})})});
+  el('text',{x:W,y:H,'text-anchor':'end','font-size':9.5,fill:'#5b6475'},s,'');})();
  /* ocorrências */
  const o=document.querySelector('.ord [aria-pressed="true"]').dataset.o;
  const ord=[...L].sort(o==='p'?(a,b)=>b.vmax-a.vmax:o==='d'?(a,b)=>(b.s??-1)-(a.s??-1):(a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
@@ -301,10 +323,19 @@ function areaTop(a){const L=filtra().filter(e=>e.a===a);const R=[...L].sort((x,y
   R.map((e,i)=>`<tr><td>${i+1}º</td><td><a class="lkf" href="#" data-fr="${e.f}" data-top10="1">${e.f}</a>${vanH(e.f)}</td><td><span class="tag" style="--c:${COR[e.g]}">${e.g}</span></td><td>${dm(e.d)}</td><td>${e.h}</td><td>${e.u}</td><td class="n pk">${e.vmax} km/h</td><td class="n">${e.lim}</td><td class="n">+${e.vmax-e.lim} km/h</td><td class="n">${e.vmed} km/h</td><td class="n">${e.fora?'—*':dur(e.s)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table></div><p class="note" style="margin:0">Clique na frota para ver os 10 maiores excessos dela.</p>'
   :'<p class="note" style="margin:0">Nenhum excesso nesta área com os filtros atuais.</p>';
  sel('dlg').hidden=false;sel('dlg-x').focus()}
+/* janela do motorista: os 10 maiores excessos dele, respeitando os filtros */
+let MOTR=[];
+function motTop(i){const r=MOTR[i];if(!r)return;const R=[...r.l].sort((x,y)=>y.vmax-x.vmax||(y.vmax-y.lim)-(x.vmax-x.lim)||(y.s??0)-(x.s??0)).slice(0,10);
+ const fl=[F.g&&F.g.toLowerCase(),F.f&&'frota '+F.f,temDia()&&txtDia().trim(),F.u&&'turno '+F.u,F.t&&F.t.toLowerCase()].filter(Boolean);
+ sel('dlg-t').textContent=`${r.m} — 10 maiores excessos`;
+ sel('dlg-s').textContent=`${i+1}º na classificação · ${NF(0)(r.n)} excessos (${r.rod} em rodovia, ${r.ter} em estrada de terra) · pico ${r.pk.vmax} km/h · frotas ${r.fr.join(', ')}${fl.length?' · filtros: '+fl.join(', '):` · de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}`}`;
+ sel('dlg-b').innerHTML=`<div class="tw"><table><thead><tr><th>#</th><th>Frota</th><th>Dia</th><th>Hora</th><th>Turno</th><th>Via</th><th class="n">Pico</th><th class="n">Limite</th><th class="n">Acima do limite</th><th class="n">Média</th><th class="n">Duração</th><th>Área / rota</th><th>Local de início</th></tr></thead><tbody>`+
+  R.map((e,k)=>`<tr><td>${k+1}º</td><td><a class="lkf" href="#" data-fr="${e.f}">${e.f}</a>${e.mo[0]==='aprox'?' <small class="mo-a">aprox.</small>':''}</td><td>${dm(e.d)}</td><td>${e.h}</td><td>${e.u}</td><td>${e.t}</td><td class="n pk">${e.vmax} km/h</td><td class="n">${e.lim}</td><td class="n">+${e.vmax-e.lim} km/h</td><td class="n">${e.vmed} km/h</td><td class="n">${e.fora?'—*':dur(e.s)}</td><td>${esc(e.a)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table></div><p class="note" style="margin:0">Clique na frota para ver os 5 maiores excessos dela em cada tipo de via.</p>';
+ sel('dlg').hidden=false;sel('dlg-x').focus()}
 function fecha(){sel('dlg').hidden=true}
 sel('dlg-x').addEventListener('click',fecha);sel('dlg').addEventListener('click',e=>{if(e.target.id==='dlg')fecha()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
-document.addEventListener('click',e=>{const a=e.target.closest('[data-fr]');if(!a)return;e.preventDefault();a.dataset.top10?frotaTop10(a.dataset.fr,+a.dataset.lim||0):frotaTop(a.dataset.fr)});
+document.addEventListener('click',e=>{const m=e.target.closest('[data-mot]');if(m){e.preventDefault();motTop(+m.dataset.mot);return}const a=e.target.closest('[data-fr]');if(!a)return;e.preventDefault();a.dataset.top10?frotaTop10(a.dataset.fr,+a.dataset.lim||0):frotaTop(a.dataset.fr)});
 document.addEventListener('keydown',e=>{const a=e.target.closest&&e.target.closest('[data-fr]');if(a&&(e.key==='Enter'||e.key===' ')){e.preventDefault();a.dataset.top10?frotaTop10(a.dataset.fr,+a.dataset.lim||0):frotaTop(a.dataset.fr)}});
 opts();render();
 </script>
