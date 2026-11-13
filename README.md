@@ -1,6 +1,6 @@
 # Excessos de velocidade — CRV
 
-Painel dos excessos de velocidade dos caminhões, pranchas e ônibus, com filtros por grupo, frota, dia, turno (A 07–15h, B 15–23h, C 23–07h) e via (rodovia ou estrada de terra). Clicar numa frota abre os 5 maiores excessos dela em estrada de terra e em rodovia.
+Painel dos excessos de velocidade dos caminhões, pranchas e ônibus, com filtros por grupo, frota, período (De / Até — um dia ou um intervalo, ex.: 06 a 12), turno (A 07–15h, B 15–23h, C 23–07h) e via (rodovia ou estrada de terra). Clicar numa frota abre os 5 maiores excessos dela em estrada de terra e em rodovia.
 
 Abra o `index.html` ou acesse pelo GitHub Pages.
 

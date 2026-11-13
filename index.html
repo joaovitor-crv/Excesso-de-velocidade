@@ -98,7 +98,8 @@ td.mot{white-space:normal;min-width:150px;font-weight:600}.mo-x{color:var(--mute
    <div class="filtros">
     <label>Grupo <select id="f-g"><option value="">Todos</option><option>Caminhões</option><option>Pranchas</option><option>Ônibus</option></select></label>
     <label>Frota <select id="f-f"></select></label>
-    <label>Dia <select id="f-d"></select></label>
+    <label>De <select id="f-di"></select></label>
+    <label>Até <select id="f-df"></select></label>
     <label>Turno <select id="f-u"><option value="">Todos</option><option value="A">A · 07–15h</option><option value="B">B · 15–23h</option><option value="C">C · 23–07h</option></select></label>
     <label>Via <select id="f-t"><option value="">Todas</option><option>Rodovia</option><option>Estrada de terra</option></select></label>
     <button type="button" id="f-x">Limpar filtros</button>
@@ -113,7 +114,7 @@ td.mot{white-space:normal;min-width:150px;font-weight:600}.mo-x{color:var(--mute
  <section class="card"><h2>Excessos por frota</h2><div class="cb"><div class="leg" id="leg-f"></div><div class="grid3" id="rg-frota"></div><p class="note">Cada cartão é uma regra do rastreador. Barra na cor do grupo; à direita, o pico de velocidade da frota naquela regra. <b>Clique numa frota para ver os 5 maiores excessos dela em cada tipo de via.</b></p></div></section>
  <section class="card"><h2>10 maiores velocidades</h2><div class="cb"><div class="grid3" id="rg-top"></div><p class="note">O maior pico de cada frota na regra, uma linha por frota. <b>Clique na frota para ver os 10 maiores excessos dela naquela regra.</b></p></div></section>
  <div class="grid">
-  <section class="card"><h2>Excessos por dia e por hora</h2><div class="cb"><div class="leg" id="leg-d"></div><div class="chart" id="c-dia"></div><div class="chart" id="c-hora" style="margin-top:10px"></div><p class="note">Hora de início da ocorrência. Clique num dia para filtrar.</p></div></section>
+  <section class="card"><h2>Excessos por dia e por hora</h2><div class="cb"><div class="leg" id="leg-d"></div><div class="chart" id="c-dia"></div><div class="chart" id="c-hora" style="margin-top:10px"></div><p class="note">Hora de início da ocorrência. Clique num dia para ver só ele; para um período, use os filtros De e Até no topo.</p></div></section>
   <section class="card"><h2>Onde acontecem</h2><div class="cb"><div class="chart" id="c-area"></div><p class="note">Área ou rota cadastrada no rastreador para a ocorrência, com o pico de velocidade em cada uma. <b>Clique numa área para ver os 20 maiores excessos dela.</b></p></div></section>
  </div>
  <section class="card"><h2>Ocorrências</h2><div class="cb"><div class="ord"><button type="button" data-o="h" aria-pressed="true">Por horário</button><button type="button" data-o="p" aria-pressed="false">Por pico</button><button type="button" data-o="d" aria-pressed="false">Por duração</button></div>
@@ -140,15 +141,23 @@ const ALL=Object.values(D.frotas).flat();
 const VANS=D.vans||[],isVan=f=>VANS.includes(f),vanH=f=>isVan(f)?'<span class="van">VAN</span>':'',vanT=f=>isVan(f)?f+' (van)':f;
 const grupoDe=f=>Object.keys(D.frotas).find(g=>D.frotas[g].includes(f));
 const DIAS=[...new Set(E.map(e=>e.d))].sort();
-const F={g:'',f:'',d:'',t:'',u:''};
+const F={g:'',f:'',di:'',df:'',t:'',u:''};
+/* período escolhido (De/Até, dias inclusos); vazio = todos os dias */
+const noDia=e=>(!F.di||e.d>=F.di)&&(!F.df||e.d<=F.df);
+const temDia=()=>!!(F.di||F.df);
+const diUm=()=>F.di&&F.di===F.df;
+const pIni=()=>F.di||DIAS[0],pFim=()=>F.df||DIAS[DIAS.length-1];
+const txtDia=()=>diUm()?' em '+dm(F.di):` de ${dm(pIni())} a ${dm(pFim())}`;
 const TURNOS=[['A','07–15h','#2a8fbd'],['B','15–23h','#e8963a'],['C','23–07h','#3b3f6b']];
 const turno=h=>{const x=+h.slice(0,2);return x>=7&&x<15?'A':x>=15&&x<23?'B':'C'};
 const sel=id=>document.getElementById(id);
 sel('per').textContent=`${D.ini} a ${D.fim}`;
 function opts(){const fs=ALL.filter(f=>!F.g||grupoDe(f)===F.g);sel('f-f').innerHTML='<option value="">Todas</option>'+fs.map(f=>`<option value="${f}">${f} · ${isVan(f)?'van ('+grupoDe(f).toLowerCase()+')':grupoDe(f)}</option>`).join('');sel('f-f').value=F.f;
- sel('f-d').innerHTML='<option value="">Todos</option>'+DIAS.map(d=>`<option value="${d}">${dm(d)}</option>`).join('');sel('f-d').value=F.d;sel('f-g').value=F.g;sel('f-t').value=F.t;sel('f-u').value=F.u}
+ sel('f-di').innerHTML='<option value="">Início</option>'+DIAS.map(d=>`<option value="${d}">${dm(d)}</option>`).join('');sel('f-di').value=F.di;
+ sel('f-df').innerHTML='<option value="">Fim</option>'+DIAS.map(d=>`<option value="${d}">${dm(d)}</option>`).join('');sel('f-df').value=F.df;
+ sel('per').textContent=temDia()?(diUm()?dm(F.di)+'/'+F.di.slice(0,4):`${dm(pIni())}/${pIni().slice(0,4)} a ${dm(pFim())}/${pFim().slice(0,4)}`):`${D.ini} a ${D.fim}`;sel('f-g').value=F.g;sel('f-t').value=F.t;sel('f-u').value=F.u}
 E.forEach(e=>{e.u=turno(e.h)});
-const filtra=(ign)=>E.filter(e=>(ign==='g'||!F.g||e.g===F.g)&&(ign==='f'||!F.f||e.f===F.f)&&(ign==='d'||!F.d||e.d===F.d)&&(ign==='u'||!F.u||e.u===F.u)&&(!F.t||e.t===F.t));
+const filtra=(ign)=>E.filter(e=>(ign==='g'||!F.g||e.g===F.g)&&(ign==='f'||!F.f||e.f===F.f)&&(ign==='d'||noDia(e))&&(ign==='u'||!F.u||e.u===F.u)&&(!F.t||e.t===F.t));
 const svg=(box,W,H)=>{box.innerHTML='';const s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox',`0 0 ${W} ${H}`);box.appendChild(s);return s};
 const el=(tag,at,p,txt)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e};
 function tip(box){let t=box.querySelector('.tip');if(!t){t=document.createElement('div');t.className='tip';t.hidden=true;box.appendChild(t)}
@@ -172,7 +181,7 @@ function render(){
   `<div class="kpi"><span class="l">Frotas com excesso</span><span class="v">${nf} de ${tot}</span><span class="s">${tot-nf?ALL.filter(f=>(!F.g||grupoDe(f)===F.g)&&(!F.f||f===F.f)&&!L.some(e=>e.f===f)).join(', ')+' sem excesso':'todas tiveram excesso'}</span></div>`].join('');
  /* resumo */
  const porF={};L.forEach(e=>{(porF[e.f]=porF[e.f]||[]).push(e)});const rk=Object.entries(porF).sort((a,b)=>b[1].length-a[1].length);
- sel('lead').innerHTML=L.length?`<b>${NF(0)(L.length)} excessos de velocidade de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}${F.g?' em '+F.g.toLowerCase():''}${F.f?' na frota '+F.f:''}${F.d?' em '+dm(F.d):''}, somando ${dur(soma(L))} acima do limite.</b> `+
+ sel('lead').innerHTML=L.length?`<b>${NF(0)(L.length)} excessos de velocidade ${temDia()?txtDia().trim():'de '+D.ini.slice(0,5)+' a '+D.fim.slice(0,5)}${F.g?' em '+F.g.toLowerCase():''}${F.f?' na frota '+F.f:''}, somando ${dur(soma(L))} acima do limite.</b> `+
   (rk.length>1?`As frotas com mais ocorrências foram ${rk.slice(0,3).map(([f,l])=>`<b>${vanT(f)}</b> (${l.length})`).join(', ')}. `:'')+
   (pk?`O maior pico foi de <b>${pk.vmax} km/h</b> na ${vanT(pk.f)}, na ${esc(pk.a)} (limite ${pk.lim} km/h).`:''):'Nenhuma ocorrência com esses filtros.';
  /* grupos */
@@ -209,13 +218,13 @@ function render(){
   const rows=DIAS.map(d=>({d,v:G.map(g=>Ld.filter(e=>e.d===d&&e.g===g).length)}));const mx=Math.max(1,...rows.map(r=>r.v.reduce((a,b)=>a+b,0)));
   const band=(W-l)/rows.length,bw=Math.min(70,band*.55),y=v=>H-b-(H-b-t)*v/mx;
   el('line',{x1:l,x2:W,y1:H-b,y2:H-b,stroke:'#8a93a6'},s);
-  rows.forEach((r,i)=>{const cx=l+band*i+band/2;let acc=0;const g=el('g',{style:'cursor:pointer',opacity:!F.d||F.d===r.d?1:.35},s);
+  rows.forEach((r,i)=>{const cx=l+band*i+band/2;let acc=0;const g=el('g',{style:'cursor:pointer',opacity:noDia(r)?1:.35},s);
    r.v.forEach((v,k)=>{if(!v)return;el('rect',{x:cx-bw/2,y:y(acc+v),width:bw,height:y(acc)-y(acc+v),fill:COR[G[k]]},g);acc+=v});
    el('text',{x:cx,y:y(acc)-5,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#1d2433'},g,NF(0)(acc));
-   el('text',{x:cx,y:H-8,'text-anchor':'middle','font-size':11.5,fill:'#5b6475','font-weight':F.d===r.d?800:400},g,dm(r.d));
+   el('text',{x:cx,y:H-8,'text-anchor':'middle','font-size':11.5,fill:'#5b6475','font-weight':temDia()&&noDia(r)?800:400},g,dm(r.d));
    el('rect',{x:cx-band/2,y:0,width:band,height:H,fill:'transparent'},g);
    g.addEventListener('mousemove',ev=>T(ev,`<b>${dm(r.d)}</b><br>${G.map((gg,k)=>`${gg}: ${r.v[k]}`).join(' · ')}`));g.addEventListener('mouseleave',()=>T());
-   g.addEventListener('click',()=>{F.d=F.d===r.d?'':r.d;opts();render()})});
+   g.addEventListener('click',()=>{if(diUm()&&F.di===r.d){F.di=F.df=''}else{F.di=F.df=r.d};opts();render()})});
   sel('leg-d').innerHTML=G.map(g=>`<span><i style="background:${COR[g]}"></i>${g}</span>`).join('');
   const box2=sel('c-hora'),H2=120,s2=svg(box2,W,H2),T2=tip(box2);const hs=[...Array(24).keys()].map(h=>L.filter(e=>+e.h.slice(0,2)===h).length);const m2=Math.max(1,...hs);const bd=(W-l)/24;
   el('text',{x:0,y:12,'font-size':11.5,'font-weight':700,fill:'#22378c'},s2,'Por hora do dia');
@@ -254,30 +263,30 @@ sel('regras').innerHTML=[
  `<b>Tempo acima do limite:</b> soma da duração das ocorrências.${D.longas.length?' Ocorrências com mais de 1 hora de duração (rastreador sem novas leituras) contam como ocorrência, mas o tempo não é somado: '+D.longas.join('; ')+'.':''}`,
  ...(D.mot?[`<b>Motorista (caminhões):</b> cruzamento da frota e do horário de cada ocorrência com o monit (${esc(D.monit||'')}) — operador logado entre o início e o fim do excesso (com 2 min de folga). Se o caminhão estava sem login, aparece "Sem operador logado". Frotas que não constam no monit aparecem como "Sem Dados - Solinftec".`]:[]),
  `<b>Fonte:</b> Relatório de Rastreamento — Alertas e notificações, de ${D.ini} a ${D.fim}.${D.cortado?' '+D.cortado:''}`].map(x=>`<li>${x}</li>`).join('');
-['f-g','f-f','f-d','f-t','f-u'].forEach(id=>sel(id).addEventListener('change',e=>{const k={'f-g':'g','f-f':'f','f-d':'d','f-t':'t','f-u':'u'}[id];F[k]=e.target.value;if(k==='g'&&F.f&&grupoDe(F.f)!==F.g)F.f='';opts();render()}));
-sel('f-x').addEventListener('click',()=>{F.g=F.f=F.d=F.t=F.u='';opts();render()});
+['f-g','f-f','f-di','f-df','f-t','f-u'].forEach(id=>sel(id).addEventListener('change',e=>{const k={'f-g':'g','f-f':'f','f-di':'di','f-df':'df','f-t':'t','f-u':'u'}[id];F[k]=e.target.value;if(F.di&&F.df&&F.di>F.df){if(k==='di')F.df=F.di;else F.di=F.df}if(k==='g'&&F.f&&grupoDe(F.f)!==F.g)F.f='';opts();render()}));
+sel('f-x').addEventListener('click',()=>{F.g=F.f=F.di=F.df=F.t=F.u='';opts();render()});
 sel('turnos').addEventListener('click',e=>{const b=e.target.closest('[data-u]');if(!b)return;F.u=F.u===b.dataset.u?'':b.dataset.u;opts();render()});
 sel('grupos').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;F.g=F.g===b.dataset.g?'':b.dataset.g;if(F.f&&grupoDe(F.f)!==F.g)F.f='';opts();render()});
 document.querySelector('.ord').addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b)return;document.querySelectorAll('.ord button').forEach(x=>x.setAttribute('aria-pressed',x===b));render()});
 /* janela da frota: 5 maiores excessos em estrada de terra e em rodovia (respeita os filtros de dia) */
-function frotaTop(f){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&(!F.d||e.d===F.d)&&(!F.u||e.u===F.u));
+function frotaTop(f){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&noDia(e)&&(!F.u||e.u===F.u));
  const top=t=>L.filter(e=>e.t===t).sort((a,b)=>b.vmax-a.vmax||(b.s??0)-(a.s??0)).slice(0,5);
  const p=L.reduce((a,e)=>Math.max(a,e.vmax),0);
  sel('dlg-t').innerHTML=`Frota ${f}${isVan(f)?' <span class="van">VAN</span>':''} — maiores excessos`;
- sel('dlg-s').textContent=`${isVan(f)?'Van, no grupo '+g.toLowerCase():g} · ${L.length} ocorrências${F.d?' em '+dm(F.d):` de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}`}${F.u?' no turno '+F.u:''} · ${dur(soma(L))} acima do limite · pico ${p||'—'} km/h`;
+ sel('dlg-s').textContent=`${isVan(f)?'Van, no grupo '+g.toLowerCase():g} · ${L.length} ocorrências${temDia()?txtDia():` de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}`}${F.u?' no turno '+F.u:''} · ${dur(soma(L))} acima do limite · pico ${p||'—'} km/h`;
  const bloco=(t,cor)=>{const R=top(t),n=L.filter(e=>e.t===t).length,lim=R[0]?R[0].lim:(t==='Rodovia'?(isVan(f)?80:70):50);
   return `<div><h3 style="color:${cor}">${t} <small>top 5 de ${n} ocorrências · limite ${lim} km/h</small></h3>`+
   (R.length?`<div class="tw"><table><thead><tr><th>#</th><th>Dia</th><th>Hora</th><th>Turno</th><th class="n">Pico</th><th class="n">Acima do limite</th><th class="n">Média</th><th class="n">Duração</th>${g==='Caminhões'?'<th>Motorista</th>':''}<th>Área / rota</th><th>Local de início</th></tr></thead><tbody>`+
    R.map((e,i)=>`<tr><td>${i+1}º</td><td>${dm(e.d)}</td><td>${e.h}</td><td>${e.u}</td><td class="n pk">${e.vmax} km/h</td><td class="n">+${e.vmax-e.lim} km/h</td><td class="n">${e.vmed} km/h</td><td class="n">${e.fora?'—*':dur(e.s)}</td>${g==='Caminhões'?'<td class="mot">'+motH(e)+'</td>':''}<td>${esc(e.a)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table></div>'
-   :`<p class="note" style="margin:0">Nenhum excesso em ${t.toLowerCase()}${F.d?' nesse dia':''}.</p>`)+'</div>'};
+   :`<p class="note" style="margin:0">Nenhum excesso em ${t.toLowerCase()}${temDia()?(diUm()?' nesse dia':' nesse período'):''}.</p>`)+'</div>'};
  sel('dlg-b').innerHTML=bloco('Estrada de terra','#8a6d1f')+bloco('Rodovia','#22378c')+`<button type="button" class="acao" id="dlg-filtra">${F.f===f?'Tirar o filtro desta frota':'Filtrar o painel por esta frota'}</button>`;
  sel('dlg-filtra').onclick=()=>{F.f=F.f===f?'':f;if(F.f&&F.g&&grupoDe(f)!==F.g)F.g='';fecha();opts();render()};
  sel('dlg').hidden=false;sel('dlg-x').focus()}
 /* janela da frota a partir das 10 maiores velocidades: os 10 maiores excessos da frota, rodovia e estrada de terra juntos */
-function frotaTop10(f,lim){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&(!lim||e.lim===lim)&&(!F.d||e.d===F.d)&&(!F.u||e.u===F.u)&&(!F.t||e.t===F.t));
+function frotaTop10(f,lim){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&(!lim||e.lim===lim)&&noDia(e)&&(!F.u||e.u===F.u)&&(!F.t||e.t===F.t));
  const R=[...L].sort((a,b)=>b.vmax-a.vmax||(b.vmax-b.lim)-(a.vmax-a.lim)||(b.s??0)-(a.s??0)).slice(0,10);
  sel('dlg-t').innerHTML=`Frota ${f}${isVan(f)?' <span class="van">VAN</span>':''} — 10 maiores excessos${lim?' · regra '+lim+' km/h':''}`;
- sel('dlg-s').textContent=`${isVan(f)?'Van, no grupo '+g.toLowerCase():g} · ${L.length} ocorrências${F.d?' em '+dm(F.d):` de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}`}${F.u?' no turno '+F.u:''}${F.t?' em '+F.t.toLowerCase():''} · do maior pico para o menor`;
+ sel('dlg-s').textContent=`${isVan(f)?'Van, no grupo '+g.toLowerCase():g} · ${L.length} ocorrências${temDia()?txtDia():` de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}`}${F.u?' no turno '+F.u:''}${F.t?' em '+F.t.toLowerCase():''} · do maior pico para o menor`;
  sel('dlg-b').innerHTML=(R.length?`<div class="tw"><table><thead><tr><th>#</th><th>Dia</th><th>Hora</th><th>Turno</th><th>Via</th><th class="n">Pico</th><th class="n">Limite</th><th class="n">Acima do limite</th><th class="n">Média</th><th class="n">Duração</th>${g==='Caminhões'?'<th>Motorista</th>':''}<th>Área / rota</th><th>Local de início</th></tr></thead><tbody>`+
   R.map((e,i)=>`<tr><td>${i+1}º</td><td>${dm(e.d)}</td><td>${e.h}</td><td>${e.u}</td><td>${e.t}</td><td class="n pk">${e.vmax} km/h</td><td class="n">${e.lim}</td><td class="n">+${e.vmax-e.lim} km/h</td><td class="n">${e.vmed} km/h</td><td class="n">${e.fora?'—*':dur(e.s)}</td>${g==='Caminhões'?'<td class="mot">'+motH(e)+'</td>':''}<td>${esc(e.a)}</td><td class="loc">${esc(e.loc)}</td></tr>`).join('')+'</tbody></table></div>'
   :'<p class="note" style="margin:0">Nenhum excesso com os filtros atuais.</p>')+`<button type="button" class="acao" id="dlg-filtra">${F.f===f?'Tirar o filtro desta frota':'Filtrar o painel por esta frota'}</button>`;
@@ -285,7 +294,7 @@ function frotaTop10(f,lim){const g=grupoDe(f);const L=E.filter(e=>e.f===f&&(!lim
  sel('dlg').hidden=false;sel('dlg-x').focus()}
 /* janela da área: os 20 maiores excessos da área, respeitando os filtros do painel */
 function areaTop(a){const L=filtra().filter(e=>e.a===a);const R=[...L].sort((x,y)=>y.vmax-x.vmax||(y.vmax-y.lim)-(x.vmax-x.lim)||(y.s??0)-(x.s??0)).slice(0,20);
- const nf=new Set(L.map(e=>e.f)).size;const fl=[F.g&&F.g.toLowerCase(),F.f&&'frota '+F.f,F.d&&dm(F.d),F.u&&'turno '+F.u,F.t&&F.t.toLowerCase()].filter(Boolean);
+ const nf=new Set(L.map(e=>e.f)).size;const fl=[F.g&&F.g.toLowerCase(),F.f&&'frota '+F.f,temDia()&&txtDia().trim(),F.u&&'turno '+F.u,F.t&&F.t.toLowerCase()].filter(Boolean);
  sel('dlg-t').textContent=`${a} — 20 maiores excessos`;
  sel('dlg-s').textContent=`${L[0]?L[0].t:''} · ${NF(0)(L.length)} ocorrências de ${nf} frotas${fl.length?' · filtros: '+fl.join(', '):` de ${D.ini.slice(0,5)} a ${D.fim.slice(0,5)}`} · do maior pico para o menor`;
  sel('dlg-b').innerHTML=R.length?`<div class="tw"><table><thead><tr><th>#</th><th>Frota</th><th>Grupo</th><th>Dia</th><th>Hora</th><th>Turno</th><th class="n">Pico</th><th class="n">Limite</th><th class="n">Acima do limite</th><th class="n">Média</th><th class="n">Duração</th><th>Local de início</th></tr></thead><tbody>`+
